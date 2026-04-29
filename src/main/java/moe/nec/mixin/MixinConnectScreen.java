@@ -4,7 +4,6 @@ import lombok.val;
 import moe.nec.wcnmwynn.Encryption;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.ConnectScreen;
-import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.multiplayer.ServerData;
 import net.minecraft.client.multiplayer.TransferState;
 import net.minecraft.client.multiplayer.resolver.ServerAddress;
@@ -21,15 +20,14 @@ public abstract class MixinConnectScreen {
   private static ServerData storedServerData;
 
   @Inject(
-    method = "startConnecting",
-    at = @At("HEAD")
+    method = "connect",
+    at = @At("HEAD"),
+    order = 10000
   )
-  private static void startConnectingHead(
-    Screen parent,
+  private void startConnectingHead(
     Minecraft minecraft,
     ServerAddress serverAddress,
     ServerData serverData,
-    boolean isQuickPlay,
     TransferState transferState,
     CallbackInfo ci
   ) {
@@ -37,11 +35,11 @@ public abstract class MixinConnectScreen {
   }
 
   @ModifyVariable(
-    method = "startConnecting",
+    method = "connect",
     at = @At("HEAD"),
     argsOnly = true,
     ordinal = 0,
-    order = 1001
+    order = 10001
   )
   private static ServerAddress startConnecting_modifyServerAddress(
     ServerAddress serverAddress

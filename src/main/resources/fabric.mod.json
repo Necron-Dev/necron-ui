@@ -2,19 +2,13 @@
   "schemaVersion": 1,
   "id": "${modId}",
   "version": "${version}",
-  "name": "Necron Prism Integration",
-  "environment": "*",
-  "entrypoints": {
-    "client": [
-    ]
-  },
+  "name": "Necron UI",
   "mixins": [
-    "necron-prism-integration.mixins.json"
+    "${modId}.mixins.json"
   ],
   "depends": {
     "java": "*",
     "minecraft": "*",
-    "fabricloader": "*",
-    "fabric-language-kotlin": "*"
+    "fabricloader": "*"
   }
 }
