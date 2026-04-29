@@ -11,7 +11,7 @@ val fabricApiVersion = "0.141.3+1.21.11"
 
 plugins {
   val loomVersion = "1.15-SNAPSHOT"
-  val enchantedJavaPluginVersion = "0.3.1"
+  val enchantedJavaPluginVersion = "0.4.0"
   id("net.fabricmc.fabric-loom-remap") version loomVersion
   id("net.yqloss.enchanted-java-plugin") version enchantedJavaPluginVersion
 }

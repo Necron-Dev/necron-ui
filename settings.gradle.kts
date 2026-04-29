@@ -7,6 +7,5 @@ pluginManagement {
     mavenCentral()
     gradlePluginPortal()
     maven("https://maven.yqloss.net")
-    mavenLocal()
   }
 }

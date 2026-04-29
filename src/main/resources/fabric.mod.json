@@ -6,6 +6,13 @@
   "mixins": [
     "${modId}.mixins.json"
   ],
+  "entrypoints": {
+    "client": [
+      {
+        "value": "necron.ui.TestInit"
+      }
+    ]
+  },
   "depends": {
     "java": "*",
     "minecraft": "*",
