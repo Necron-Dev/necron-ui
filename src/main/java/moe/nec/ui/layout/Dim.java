@@ -11,7 +11,12 @@ import java.util.Collections;
 import java.util.List;
 import java.util.function.Consumer;
 
-public sealed interface Dim permits Dim.Fixed, Dim.Flex, Dim.HookSum, Dim.HookedFlex, Dim.Min, Dim.Sum {
+import static moe.nec.ui.layout.Dim.flex;
+import static moe.nec.ui.react.React.constant;
+import static moe.nec.ui.react.React.react;
+import static moe.nec.ui.util.fn.Fn1.fn;
+
+public interface Dim {
   @With
   record CreateResult(
     React<Float> react,
@@ -36,7 +41,29 @@ public sealed interface Dim permits Dim.Fixed, Dim.Flex, Dim.HookSum, Dim.Hooked
   @With
   record Fixed(float value) implements Dim {
     public React<Float> create() {
-      return React.of(value);
+      return fp(value);
+    }
+
+    @Override
+    public CreateResult create(React<Float> space, boolean isMajorAxis) {
+      return new CreateResult(create(), null, null);
+    }
+
+    @Override
+    public boolean isIndependent() {
+      return true;
+    }
+
+    @Override
+    public boolean isIndependentOnChildren() {
+      return true;
+    }
+  }
+
+  @With
+  record ReactFixed(React<Float> value) implements Dim {
+    public React<Float> create() {
+      return value;
     }
 
     @Override
@@ -58,7 +85,7 @@ public sealed interface Dim permits Dim.Fixed, Dim.Flex, Dim.HookSum, Dim.Hooked
   @With
   record Flex(float value) implements Dim {
     public React<Float> create(React<Float> space) {
-      return React.from(() -> value * space.peek(), space);
+      return react(fn((Float v) -> v * value), space);
     }
 
     @Override
@@ -78,9 +105,9 @@ public sealed interface Dim permits Dim.Fixed, Dim.Flex, Dim.HookSum, Dim.Hooked
   }
 
   @With
-  record HookedFlex(React<Float> react) implements Dim {
+  record ReactFlex(React<Float> react) implements Dim {
     public React<Float> create(React<Float> space) {
-      return React.from(
+      return React.react(
         () -> space.peek() * react.peek(),
         space, react
       );
@@ -178,7 +205,7 @@ public sealed interface Dim permits Dim.Fixed, Dim.Flex, Dim.HookSum, Dim.Hooked
       val ar = resultA.react;
       val br = resultA.react;
       return new CreateResult(
-        React.from(() -> ar.peek() + br.peek(), ar, br),
+        React.react(() -> ar.peek() + br.peek(), ar, br),
         x -> {
           resultA.addReacts.accept(x);
           resultB.addReacts.accept(x);
@@ -206,7 +233,7 @@ public sealed interface Dim permits Dim.Fixed, Dim.Flex, Dim.HookSum, Dim.Hooked
     public CreateResult create(React<Float> space, boolean isMajorAxis) {
       val resultA = a.create(space, isMajorAxis);
       val ar = resultA.react;
-      return resultA.withReact(React.from(() -> ar.peek() + b.peek(), ar, b));
+      return resultA.withReact(React.react(() -> ar.peek() + b.peek(), ar, b));
     }
 
     @Override
@@ -230,11 +257,19 @@ public sealed interface Dim permits Dim.Fixed, Dim.Flex, Dim.HookSum, Dim.Hooked
     return value == 0F ? ZERO : new Fixed(value);
   }
 
+  static ReactFixed fixed(React<Float> value) {
+    return new ReactFixed(value);
+  }
+
   static Fixed zero() {
     return ZERO;
   }
 
   static Fixed px(float value) {
+    return fixed(value);
+  }
+
+  static ReactFixed px(React<Float> value) {
     return fixed(value);
   }
 
@@ -266,8 +301,8 @@ public sealed interface Dim permits Dim.Fixed, Dim.Flex, Dim.HookSum, Dim.Hooked
     return value == 100F ? UNIT : flex(value / 100F);
   }
 
-  static HookedFlex flex(React<Float> react) {
-    return new HookedFlex(react);
+  static ReactFlex flex(React<Float> react) {
+    return new ReactFlex(react);
   }
 
   static Flex max() {
@@ -276,5 +311,9 @@ public sealed interface Dim permits Dim.Fixed, Dim.Flex, Dim.HookSum, Dim.Hooked
 
   static Min min() {
     return Min.INSTANCE;
+  }
+
+  static React<Float> fp(float v) {
+    return constant(v);
   }
 }

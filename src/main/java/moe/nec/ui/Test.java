@@ -1,40 +1,47 @@
 import lombok.val;
 import moe.nec.ui.context.Context;
-import moe.nec.ui.element.BasicContainer;
-import moe.nec.ui.element.BasicElement;
+import moe.nec.ui.element.Div;
+import moe.nec.ui.element.Node;
 import moe.nec.ui.event.DebugEvent;
 import moe.nec.ui.event.LayoutEvent;
 import moe.nec.ui.layout.Align;
-import moe.nec.ui.layout.Box;
-import moe.nec.ui.layout.Dim;
 import moe.nec.ui.layout.Direction;
 import org.joml.Vector2f;
 import org.joml.Vector4fc;
 
+import static moe.nec.ui.layout.Box.box;
+import static moe.nec.ui.layout.Box.size;
+import static moe.nec.ui.layout.Dim.*;
+
 void main() {
-  val container = new BasicContainer(
+  val container = new Div(
     null,
     Direction.HORIZONTAL,
-    Box.box(Dim.px(1920), Dim.px(1080), 100),
-    Align.center()
+    box(px(1920), px(1080), 100),
+    Align.center(),
+    fp(0)
   );
 
   container.add(
-    parent -> new BasicElement(
+    parent -> new Node(
       parent,
-      Box.size(Dim.px(400), Dim.px(200))
+      size(px(400), px(200)),
+      parent.elevated(1)
     ),
-    parent -> new BasicElement(
+    parent -> new Node(
       parent,
-      Box.size(Dim.flex(1, 3), Dim.max())
+      size(flex(1, 3), flex()),
+      fp(0)
     ),
-    parent -> new BasicElement(
+    parent -> new Node(
       parent,
-      Box.size(Dim.flex(1, 3), Dim.max())
+      size(flex(1, 3), flex()),
+      fp(0)
     ),
-    parent -> new BasicElement(
+    parent -> new Node(
       parent,
-      Box.size(Dim.flex(1, 3), Dim.max())
+      size(flex(1, 3), flex()),
+      fp(0)
     )
   );
 

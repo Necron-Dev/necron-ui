@@ -28,5 +28,5 @@ public interface SmartClosable extends AutoCloseable {
 
   default void doClose() {}
 
-  default void collectObjectsToClose(Queue<Object> queue) {}
+  default void collectObjectsToClose(Queue<? super Object> queue) {}
 }

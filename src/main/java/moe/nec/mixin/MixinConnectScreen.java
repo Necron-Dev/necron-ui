@@ -46,6 +46,7 @@ public abstract class MixinConnectScreen {
   private static ServerAddress startConnecting_modifyServerAddress(
     ServerAddress serverAddress
   ) {
+    System.out.printf("Trying to decode connection to %s\n", serverAddress);
     if (storedServerData == null || !storedServerData.name.startsWith("@")) {
       return serverAddress;
     }

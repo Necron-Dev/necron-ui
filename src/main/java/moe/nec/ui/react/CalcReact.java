@@ -93,7 +93,7 @@ public abstract class CalcReact<T> extends SerialReact<T> implements SmartClosab
   protected abstract T calculate();
 
   @Override
-  public void collectObjectsToClose(Queue<Object> queue) {
+  public void collectObjectsToClose(Queue<? super Object> queue) {
     queue.addAll(hooks);
   }
 }

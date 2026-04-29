@@ -3,11 +3,13 @@ package moe.nec.ui.layout;
 import lombok.experimental.UtilityClass;
 import moe.nec.ui.react.React;
 
+import static moe.nec.ui.layout.Dim.fp;
+
 @UtilityClass
 public class Align {
-  private final React<Float> START = React.of(0F);
-  private final React<Float> CENTER = React.of(0.5F);
-  private final React<Float> END = React.of(1F);
+  private final React<Float> START = fp(0.5F);
+  private final React<Float> CENTER = fp(0.5F);
+  private final React<Float> END = fp(1F);
 
   public React<Float> start() {
     return START;

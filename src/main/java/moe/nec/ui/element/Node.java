@@ -13,7 +13,7 @@ import org.joml.Vector4f;
 
 import static yqloss.E.$;
 
-public class BasicElement implements Element {
+public class Node implements Element {
   @Getter
   private final Container parent;
 
@@ -29,7 +29,10 @@ public class BasicElement implements Element {
   @Getter
   private final boolean heightIndependent;
 
-  public BasicElement(Container parent, Box.Size size) {
+  @Getter
+  private final React<Float> elevation;
+
+  public Node(Container parent, Box.Size size, React<Float> elevation) {
     val width = size.width();
     val height = size.height();
     this.parent = parent;
@@ -39,6 +42,7 @@ public class BasicElement implements Element {
     widthIndependent = width.isIndependent();
     this.height = handleCreateResult(true, heightResult);
     heightIndependent = height.isIndependent();
+    this.elevation = elevation;
   }
 
   protected React<Float> handleCreateResult(boolean vertical, Dim.CreateResult result) {
@@ -51,6 +55,7 @@ public class BasicElement implements Element {
       case LayoutEvent _ -> {
         width.get();
         height.get();
+        elevation.get();
       }
 
       case DebugEvent debugEvent -> {

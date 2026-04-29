@@ -23,7 +23,7 @@ import java.util.function.Function;
 
 import static yqloss.E._cast;
 
-public class BasicContainer extends BasicElement implements Container {
+public class Div extends Node implements Container {
   protected final List<Element> children = new ArrayList<>();
   private final boolean widthIndependentOnChildren;
   private final boolean heightIndependentOnChildren;
@@ -83,11 +83,12 @@ public class BasicContainer extends BasicElement implements Container {
     }
   }
 
-  public BasicContainer(
+  public Div(
     Container parent,
     Direction direction,
     Box.SizePadding sizePadding,
-    React<Float> alignment
+    React<Float> alignment,
+    React<Float> elevation
   ) {
     if (sizePadding.width() instanceof Dim.Min) sizePadding = sizePadding.padWidth();
     if (sizePadding.height() instanceof Dim.Min) sizePadding = sizePadding.padHeight();
@@ -97,17 +98,17 @@ public class BasicContainer extends BasicElement implements Container {
     addHeightCallbacks = new ArrayList<>();
     removeWidthCallbacks = new ArrayList<>();
     removeHeightCallbacks = new ArrayList<>();
-    super(parent, sizePadding.asSize());
+    super(parent, sizePadding.asSize(), elevation);
     this.direction = direction;
     paddingTop = sizePadding.paddingTop();
     paddingRight = sizePadding.paddingRight();
     paddingBottom = sizePadding.paddingBottom();
     paddingLeft = sizePadding.paddingLeft();
-    widthWithPadding = React.from(
+    widthWithPadding = React.react(
       () -> getWidth().peek() - paddingLeft.peek() - paddingRight.peek(),
       getWidth(), paddingLeft, paddingRight
     );
-    heightWithPadding = React.from(
+    heightWithPadding = React.react(
       () -> getHeight().peek() - paddingTop.peek() - paddingBottom.peek(),
       getHeight(), paddingTop, paddingBottom
     );
@@ -143,7 +144,7 @@ public class BasicContainer extends BasicElement implements Container {
   }
 
   @SafeVarargs
-  public final BasicContainer add(Function<BasicContainer, Element>... constructors) {
+  public final Div add(Function<Div, Element>... constructors) {
     val widths = new ArrayList<React<Float>>(constructors.length);
     val heights = new ArrayList<React<Float>>(constructors.length);
     val independentWidths = new ArrayList<React<Float>>(constructors.length);
@@ -181,11 +182,9 @@ public class BasicContainer extends BasicElement implements Container {
   public boolean dispatch(Context context, Event event, boolean handled) {
     switch (event) {
       case LayoutEvent _ -> {
-        for (var i = 0; i < 2; i++) {
-          updateMetrics(context, event, handled);
-          for (val child : children()) {
-            child.dispatch(context, event, false);
-          }
+        updateMetrics(context, event, handled);
+        for (val child : children()) {
+          child.dispatch(context, event, false);
         }
         updateMetrics(context, event, handled);
         return false;
