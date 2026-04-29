@@ -10,7 +10,6 @@ import java.util.Deque;
 
 import static moe.nec.ui.react.React.react;
 import static moe.nec.ui.util.fn.Fn1.fn;
-import static moe.nec.ui.util.fn.Fn2.fn;
 
 public class Animation extends SerialReact<Float> {
   private record EaseAction(
@@ -27,7 +26,6 @@ public class Animation extends SerialReact<Float> {
                                      .hooking((_, time) -> update(time));
 
   public Animation(float base) {
-    val fn2 = fn((a, b) -> a);
     this.base = base;
     current = base;
   }

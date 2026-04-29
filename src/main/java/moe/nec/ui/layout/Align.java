@@ -1,33 +1,31 @@
 package moe.nec.ui.layout;
 
-import lombok.experimental.UtilityClass;
 import moe.nec.ui.react.React;
 
 import static moe.nec.ui.layout.Dim.fp;
 
-@UtilityClass
 public class Align {
-  private final React<Float> START = fp(0.5F);
-  private final React<Float> CENTER = fp(0.5F);
-  private final React<Float> END = fp(1F);
+  private static final React<Float> START = fp(0.5F);
+  private static final React<Float> CENTER = fp(0.5F);
+  private static final React<Float> END = fp(1F);
 
-  public React<Float> start() {
+  public static React<Float> start() {
     return START;
   }
 
-  public React<Float> center() {
+  public static React<Float> center() {
     return CENTER;
   }
 
-  public React<Float> end() {
+  public static React<Float> end() {
     return END;
   }
 
-  public React<Float> of(float value) {
+  public static React<Float> of(float value) {
     return React.of(value);
   }
 
-  public React<Float> percent(float value) {
+  public static React<Float> percent(float value) {
     return of(value / 100F);
   }
 }

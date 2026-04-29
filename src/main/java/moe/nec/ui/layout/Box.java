@@ -1,10 +1,8 @@
 package moe.nec.ui.layout;
 
 import lombok.With;
-import lombok.experimental.UtilityClass;
 import moe.nec.ui.react.React;
 
-@UtilityClass
 public class Box {
   @With
   public record Size(
@@ -38,11 +36,11 @@ public class Box {
     }
   }
 
-  public Size size(Dim width, Dim height) {
+  public static Size size(Dim width, Dim height) {
     return new Size(width, height);
   }
 
-  public SizePadding box(
+  public static SizePadding box(
     Dim width,
     Dim height,
     React<Float> paddingTop,
@@ -60,7 +58,7 @@ public class Box {
     );
   }
 
-  public SizePadding box(
+  public static SizePadding box(
     Dim width,
     Dim height,
     float paddingTop,
@@ -78,7 +76,7 @@ public class Box {
     );
   }
 
-  public SizePadding box(
+  public static SizePadding box(
     Dim width,
     Dim height
   ) {
@@ -92,7 +90,7 @@ public class Box {
     );
   }
 
-  public SizePadding box(
+  public static SizePadding box(
     Dim width,
     Dim height,
     React<Float> padding
@@ -107,7 +105,7 @@ public class Box {
     );
   }
 
-  public SizePadding box(
+  public static SizePadding box(
     Dim width,
     Dim height,
     float padding
@@ -119,7 +117,7 @@ public class Box {
     );
   }
 
-  public SizePadding box(
+  public static SizePadding box(
     Dim width,
     Dim height,
     React<Float> paddingVertical,
@@ -135,7 +133,7 @@ public class Box {
     );
   }
 
-  public SizePadding box(
+  public static SizePadding box(
     Dim width,
     Dim height,
     float paddingVertical,
@@ -149,7 +147,7 @@ public class Box {
     );
   }
 
-  public SizePadding box(
+  public static SizePadding box(
     Dim width,
     Dim height,
     React<Float> paddingTop,
@@ -166,7 +164,7 @@ public class Box {
     );
   }
 
-  public SizePadding box(
+  public static SizePadding box(
     Dim width,
     Dim height,
     float paddingTop,

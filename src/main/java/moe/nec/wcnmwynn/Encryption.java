@@ -1,18 +1,16 @@
 package moe.nec.wcnmwynn;
 
 import com.google.common.collect.Lists;
-import lombok.experimental.UtilityClass;
 import lombok.val;
 
 import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Random;
 
-@UtilityClass
 public class Encryption {
-  private final String SERVER_IP_CHARSET = generateCharset(0);
+  private static final String SERVER_IP_CHARSET = generateCharset(0);
 
-  private String generateCharset(long seed) {
+  private static String generateCharset(long seed) {
     val characters = "0123456789-.:[qwertyuiopasdfghjklzxcvbnm";
     val characterList = new ArrayList<>(Lists.charactersOf(characters));
     val random = new Random(0x114514_ACCA2C_6978L ^ seed);
@@ -23,7 +21,7 @@ public class Encryption {
     return builder.toString();
   }
 
-  private BigInteger base41(String charset, String ip) {
+  private static BigInteger base41(String charset, String ip) {
     var base41 = BigInteger.ZERO;
     val big41 = BigInteger.valueOf(41);
     for (val ch : ip.toCharArray()) {
@@ -34,7 +32,7 @@ public class Encryption {
     return base41;
   }
 
-  private String debase41(String charset, BigInteger encrypted) {
+  private static String debase41(String charset, BigInteger encrypted) {
     val big41 = BigInteger.valueOf(41);
     val builder = new StringBuilder();
     while (!BigInteger.ZERO.equals(encrypted)) {
@@ -45,7 +43,7 @@ public class Encryption {
     return builder.toString();
   }
 
-  public String encrypt(String boostIp, String serverIp) {
+  public static String encrypt(String boostIp, String serverIp) {
     val serverIp41 = base41(SERVER_IP_CHARSET, serverIp);
     if (serverIp41 == null) return null;
     val boostIp41 = base41(
@@ -56,7 +54,7 @@ public class Encryption {
     return boostIp41.toString(36);
   }
 
-  public String decrypt(String encrypted, String serverIp) {
+  public static String decrypt(String encrypted, String serverIp) {
     val serverIp41 = base41(SERVER_IP_CHARSET, serverIp);
     if (serverIp41 == null) return null;
     return debase41(

@@ -1,14 +1,12 @@
 plugins {
   val loomVersion = "1.15-SNAPSHOT"
-  val lombokVersion = "9.5.0"
   val enchantedJavaPluginVersion = "0.3.1"
   id("net.fabricmc.fabric-loom-remap") version loomVersion
-  id("io.freefair.lombok") version lombokVersion
   id("net.yqloss.enchanted-java-plugin") version enchantedJavaPluginVersion
 }
 
 val group = "moe.nec"
-val modId = "necron-prism-integration"
+val modId = "necron-ui"
 val version = "0.0.1"
 
 val replacements = listOf(
@@ -16,6 +14,7 @@ val replacements = listOf(
   ::version,
 ).associate { it.name to it() }
 
+val lombokVersion = "1.18.46"
 val enchantedJavaLibraryVersion = "0.3.0"
 val minecraftVersion = "1.21.11"
 val parchmentVersion = "2025.12.20"
@@ -36,6 +35,9 @@ repositories {
 }
 
 dependencies {
+  compileOnly("org.projectlombok:lombok:$lombokVersion")
+  annotationProcessor("org.projectlombok:lombok:$lombokVersion")
+
   compileOnly("net.yqloss:enchanted-java-library:$enchantedJavaLibraryVersion")
   minecraft("com.mojang:minecraft:$minecraftVersion")
 
