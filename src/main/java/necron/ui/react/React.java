@@ -1,9 +1,11 @@
 package necron.ui.react;
 
 import lombok.val;
+import necron.ui.util.MappedList;
 import necron.ui.util.fn.Fn;
 
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Objects;
 import java.util.function.BiPredicate;
 import java.util.function.Consumer;
@@ -183,6 +185,52 @@ public interface React<T> extends Supplier<T> {
     return React.<T>subList().setParent(parent, transformer);
   }
 
+  static <V, T> ListReact<T> mapList(
+    ListReact<? extends V> parent,
+    Function<? super V, ? extends T> transformer
+  ) {
+    return new ListReact<>() {
+      @Override
+      public AutoCloseable hookMove(MoveFn<? super T> hook) {
+        return parent.hookMove((from, to, value) -> hook.onMove(from, to, transformer.apply(value)));
+      }
+
+      @Override
+      public AutoCloseable hookInsert(InsertFn<? super T> hook) {
+        return parent.hookInsert((index, value) -> hook.onInsert(index, transformer.apply(value)));
+      }
+
+      @Override
+      public AutoCloseable hookRemove(RemoveFn<? super T> hook) {
+        return parent.hookRemove((index, value) -> hook.onRemove(index, transformer.apply(value)));
+      }
+
+      @Override
+      public AutoCloseable hook(HookFn<? super List<T>> hook) {
+        return parent.hook((oldValue, newValue) -> hook.onChange(mapped(oldValue), mapped(newValue)));
+      }
+
+      @Override
+      public long getSerial() {
+        return parent.getSerial();
+      }
+
+      @Override
+      public List<T> get() {
+        return mapped(parent.get());
+      }
+
+      @Override
+      public List<T> peek() {
+        return mapped(parent.peek());
+      }
+
+      private List<T> mapped(List<? extends V> original) {
+        return MappedList.create(original, transformer);
+      }
+    };
+  }
+
   static <T extends WithKey> CalcListReact<T> calcList(
     Consumer<? super Consumer<? super ConstructorWithKey<? extends T>>> calc
   ) {
@@ -200,19 +248,23 @@ public interface React<T> extends Supplier<T> {
     };
   }
 
-  static void listDepend(
-    CalcReact<?> calcReact,
+  static <T> CalcReact<T> listDepend(
+    CalcReact<T> calcReact,
     ListReact<? extends React<?>> list
   ) {
+    list.peek().forEach(calcReact::dependsOn);
     list
       .hookingInsert((_, react) -> calcReact.dependsOn(react))
       .hookingRemove((_, react) -> calcReact.cancelDependencies(react));
+    return calcReact;
   }
 
-  static void listListen(
-    CalcReact<?> calcReact,
+  static <T> CalcReact<T> listListen(
+    CalcReact<T> calcReact,
     ListReact<? extends React<?>> list
   ) {
+    list.peek().forEach(calcReact::dependsOn);
     list.hookingInsert((_, react) -> calcReact.listensTo(react));
+    return calcReact;
   }
 }

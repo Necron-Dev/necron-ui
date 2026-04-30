@@ -1,5 +1,6 @@
 package necron.ui.element;
 
+import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.val;
 import necron.ui.NecronUi;
@@ -8,36 +9,31 @@ import necron.ui.event.Event;
 import necron.ui.event.MetricsEvent;
 import necron.ui.event.RenderEvent;
 import necron.ui.layout.Box;
-import necron.ui.layout.Dim;
 import necron.ui.react.React;
 import necron.ui.render.DebugRect;
 import org.joml.Vector2f;
 
+import static necron.ui.react.React.subList;
 import static yqloss.E.$;
 
 @Getter
+@AllArgsConstructor
 public class Node implements Element {
-  private final Object key;
   private final Container parent;
+  private final Object key;
   private final React<Float> width, height, elevation;
   private final boolean widthIndependent, heightIndependent;
 
   public Node(Container parent, Object key, Box.Size size, React<Float> elevation) {
+    this.parent = parent;
     this.key = key;
     val width = size.getWidth();
     val height = size.getHeight();
-    this.parent = parent;
-    val widthResult = width.create($(parent.getHorizontalSpace()), false);
-    val heightResult = height.create($(parent.getVerticalSpace()), false);
-    this.width = handleCreateResult(false, widthResult);
+    this.width = width.create(subList(), $(parent.getHorizontalSpace()), false);
     widthIndependent = width.isIndependent();
-    this.height = handleCreateResult(true, heightResult);
+    this.height = height.create(subList(), $(parent.getVerticalSpace()), false);
     heightIndependent = height.isIndependent();
     this.elevation = elevation;
-  }
-
-  protected React<Float> handleCreateResult(boolean vertical, Dim.CreateResult result) {
-    return result.getReact();
   }
 
   @Override

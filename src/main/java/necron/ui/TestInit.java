@@ -35,9 +35,9 @@ public class TestInit implements ClientModInitializer {
     windowWidth = react(() -> (float) $($(Lazy.MC.getWindow().getGuiScaledWidth()), 0)),
     windowHeight = react(() -> (float) $($(Lazy.MC.getWindow().getGuiScaledHeight()), 0));
 
-  private final Animation animation = new Animation(10F);
+  private final Animation animation = new Animation(100F);
 
-  private float a = 10F, b = 100F;
+  private float a = 100F, b = 200F;
 
   private final UpdaterReact updater = updater();
 
@@ -53,10 +53,10 @@ public class TestInit implements ClientModInitializer {
   );
 
   private final Div div = Div.x(
-    null, _id, box(px(windowWidth), px(windowHeight), 100), fp(0), Align.center(),
+    null, _id, box(min(), min()), fp(0), Align.center(),
     _ -> dsl -> {
       dsl.add(_id, (p, k) -> new Node(p, k, size(px(animation), px(animation)), p.up(0)));
-      dsl.add(_id, (p, k) -> new Node(p, k, size(flex(), flex()), p.up(0)));
+      dsl.add(_id, (p, k) -> new Node(p, k, size(px(200), flex()), p.up(0)));
     }
   );
 

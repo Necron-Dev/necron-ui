@@ -8,15 +8,14 @@ import necron.ui.event.*;
 import necron.ui.layout.Box;
 import necron.ui.layout.Dim;
 import necron.ui.layout.Direction;
-import necron.ui.react.CalcReact;
 import necron.ui.react.React;
 import necron.ui.react.SubListReact;
 import necron.ui.render.DebugRect;
 import org.joml.Vector2f;
 import org.joml.Vector2fc;
 
-import java.util.*;
-import java.util.function.Consumer;
+import java.util.List;
+import java.util.WeakHashMap;
 import java.util.function.Function;
 import java.util.function.Predicate;
 
@@ -26,16 +25,9 @@ import static necron.ui.layout.Dim.px;
 import static necron.ui.react.React.*;
 import static necron.ui.util.fn.Fn2.fn;
 import static necron.ui.util.fn.Fn3.fn;
+import static yqloss.E.$;
 
 public class Div extends Node implements Container {
-  private final boolean widthIndependentOnChildren, heightIndependentOnChildren;
-
-  private final List<Consumer<React<Float>[]>>
-    addWidthCallbacks,
-    addHeightCallbacks,
-    removeWidthCallbacks,
-    removeHeightCallbacks;
-
   private final Direction direction;
 
   private final React<Float>
@@ -47,47 +39,12 @@ public class Div extends Node implements Container {
     heightWithPadding;
 
   @Getter
-  private final SubListReact<Element> children = subList();
+  private final SubListReact<Element> children;
 
   @Getter
   private final React<Float> alignment, horizontalSpace, verticalSpace;
 
   private final WeakHashMap<Object, Vector2fc> cachedPositions = new WeakHashMap<>();
-
-  private static class SpaceReact extends CalcReact<Float> {
-    private final React<Float> length;
-    private final List<React<Float>> reacts;
-
-    public SpaceReact(React<Float> length) {
-      this.length = length;
-      reacts = new ArrayList<>();
-      super(Objects::equals);
-      dependsOn(length);
-    }
-
-    @Override
-    protected Float calculate() {
-      var size = length.peek();
-      for (val react : reacts) {
-        size -= react.peek();
-      }
-      return Math.max(size, 0F);
-    }
-
-    @SafeVarargs
-    public final void add(React<Float>... reacts) {
-      Collections.addAll(this.reacts, reacts);
-      dependsOn(reacts);
-      forceUpdate();
-    }
-
-    @SafeVarargs
-    public final void remove(React<Float>... reacts) {
-      this.reacts.removeAll(Arrays.asList(reacts));
-      cancelDependencies(reacts);
-      forceUpdate();
-    }
-  }
 
   private React<Float> createSpaceReact(
     React<Float> length,
@@ -102,18 +59,17 @@ public class Div extends Node implements Container {
            ? elementLength.apply(x)
            : fp(0)
     );
-    val spaceResult = react(
-      fn((Float lengthValue, List<React<Float>> listReact) -> {
-        var space = lengthValue;
-        for (val element : listReact) {
-          space -= element.peek();
-        }
-        return space;
-      }),
-      length, childrenLength
+    return listDepend(
+      react(
+        fn((Float lengthValue, List<React<Float>> listReact) -> {
+          var space = lengthValue;
+          for (val element : listReact) {
+            space -= element.peek();
+          }
+          return space;
+        }), length, childrenLength
+      ), childrenLength
     );
-    listDepend(spaceResult, childrenLength);
-    return spaceResult;
   }
 
   public Div(
@@ -127,19 +83,26 @@ public class Div extends Node implements Container {
   ) {
     if (sizePadding.getWidth() instanceof Dim.Min) sizePadding = sizePadding.padWidth();
     if (sizePadding.getHeight() instanceof Dim.Min) sizePadding = sizePadding.padHeight();
-    widthIndependentOnChildren = sizePadding.getWidth().isIndependentOnChildren();
-    heightIndependentOnChildren = sizePadding.getHeight().isIndependentOnChildren();
-    addWidthCallbacks = new ArrayList<>();
-    addHeightCallbacks = new ArrayList<>();
-    removeWidthCallbacks = new ArrayList<>();
-    removeHeightCallbacks = new ArrayList<>();
     this.direction = direction;
     paddingTop = sizePadding.getPaddingTop();
     paddingRight = sizePadding.getPaddingRight();
     paddingBottom = sizePadding.getPaddingBottom();
     paddingLeft = sizePadding.getPaddingLeft();
     this.alignment = alignment;
-    super(parent, key, sizePadding.asSize(), elevation);
+    val width = sizePadding.getWidth();
+    val height = sizePadding.getHeight();
+    val list = this.children = subList();
+    val horizontal = subList(list, x -> x.isWidthIndependent() ? x.getWidth() : fp(0));
+    val vertical = subList(list, x -> x.isHeightIndependent() ? x.getHeight() : fp(0));
+    super(
+      parent,
+      key,
+      width.create(horizontal, $(parent.getHorizontalSpace()), direction == Direction.HORIZONTAL),
+      height.create(vertical, $(parent.getVerticalSpace()), direction == Direction.VERTICAL),
+      elevation,
+      width.isIndependent(),
+      height.isIndependent()
+    );
     widthWithPadding = react(
       fn((Float w, Float l, Float r) -> w - l - r),
       getWidth(), paddingLeft, paddingRight
@@ -193,38 +156,6 @@ public class Div extends Node implements Container {
     return heightWithPadding;
   }
 
-  @Override
-  protected React<Float> handleCreateResult(boolean vertical, Dim.CreateResult result) {
-    val addCallbacks = vertical ? addHeightCallbacks : addWidthCallbacks;
-    val removeCallbacks = vertical ? removeHeightCallbacks : removeWidthCallbacks;
-    if (result.getAddReacts() != null) addCallbacks.add(result.getAddReacts());
-    if (result.getRemoveReacts() != null) removeCallbacks.add(result.getRemoveReacts());
-    return result.getReact();
-  }
-
-  //  @SafeVarargs
-//  public final Div add(Function<? super Div, ? extends Element>... constructors) {
-//    val widths = new ArrayList<React<Float>>(constructors.length);
-//    val heights = new ArrayList<React<Float>>(constructors.length);
-//    val independentWidths = new ArrayList<React<Float>>(constructors.length);
-//    val independentHeights = new ArrayList<React<Float>>(constructors.length);
-//    for (val constructor : constructors) {
-//      val element = constructor.apply(this);
-//      if (element.isWidthIndependent() || widthIndependentOnChildren)
-//        widths.add(element.getWidth());
-//      if (element.isHeightIndependent() || heightIndependentOnChildren)
-//        heights.add(element.getHeight());
-//    }
-//    val widthArray = widths.toArray(new React[0]);
-//    val heightArray = heights.toArray(new React[0]);
-//    for (val callback : addWidthCallbacks) {
-//      callback.accept(_cast(widthArray));
-//    }
-//    for (val callback : addHeightCallbacks) {
-//      callback.accept(_cast(heightArray));
-//    }
-//    return this;
-//  }
   @Override
   public boolean dispatch(Context context, Event event, boolean handled) {
     switch (event) {

@@ -4,6 +4,8 @@ import lombok.Value;
 import lombok.With;
 import necron.ui.react.React;
 
+import static necron.ui.layout.Dim.fp;
+
 public class Box {
   @With
   @Value
@@ -16,10 +18,6 @@ public class Box {
   public static class SizePadding {
     Dim width, height;
     React<Float> paddingTop, paddingRight, paddingBottom, paddingLeft;
-
-    public Size asSize() {
-      return new Size(width, height);
-    }
 
     public SizePadding padWidth() {
       return withWidth(width.plus(paddingLeft).plus(paddingRight));
@@ -67,10 +65,10 @@ public class Box {
     return new SizePadding(
       width,
       height,
-      Dim.pxHook(paddingTop),
-      Dim.pxHook(paddingRight),
-      Dim.pxHook(paddingBottom),
-      Dim.pxHook(paddingLeft)
+      fp(paddingTop),
+      fp(paddingRight),
+      fp(paddingBottom),
+      fp(paddingLeft)
     );
   }
 
@@ -81,10 +79,10 @@ public class Box {
     return box(
       width,
       height,
-      Dim.zeroHook(),
-      Dim.zeroHook(),
-      Dim.zeroHook(),
-      Dim.zeroHook()
+      fp(0),
+      fp(0),
+      fp(0),
+      fp(0)
     );
   }
 
@@ -111,7 +109,7 @@ public class Box {
     return box(
       width,
       height,
-      Dim.pxHook(padding)
+      fp(padding)
     );
   }
 
@@ -140,8 +138,8 @@ public class Box {
     return box(
       width,
       height,
-      Dim.pxHook(paddingVertical),
-      Dim.pxHook(paddingHorizontal)
+      fp(paddingVertical),
+      fp(paddingHorizontal)
     );
   }
 
@@ -172,9 +170,9 @@ public class Box {
     return box(
       width,
       height,
-      Dim.pxHook(paddingTop),
-      Dim.pxHook(paddingHorizontal),
-      Dim.pxHook(paddingBottom)
+      fp(paddingTop),
+      fp(paddingHorizontal),
+      fp(paddingBottom)
     );
   }
 }

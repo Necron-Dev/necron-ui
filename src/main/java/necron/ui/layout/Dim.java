@@ -1,34 +1,20 @@
 package necron.ui.layout;
 
 import lombok.Value;
-import lombok.With;
 import lombok.val;
-import necron.ui.react.CalcReact;
 import necron.ui.react.ConstReact;
+import necron.ui.react.ListReact;
 import necron.ui.react.React;
-
-import java.util.*;
-import java.util.function.Consumer;
 
 import static necron.ui.layout.Dim.flex;
 import static necron.ui.layout.Dim.fp;
-import static necron.ui.react.React.constant;
-import static necron.ui.react.React.react;
+import static necron.ui.react.React.*;
 import static necron.ui.util.fn.Fn2.fn;
 
 public interface Dim {
-  @With
-  @Value
-  class CreateResult {
-    React<Float> react;
-    Consumer<React<Float>[]> addReacts, removeReacts;
-  }
-
-  CreateResult create(React<Float> space, boolean isMajorAxis);
+  React<Float> create(ListReact<React<Float>> children, React<Float> space, boolean isMajorAxis);
 
   boolean isIndependent();
-
-  boolean isIndependentOnChildren();
 
   default Dim plus(Dim other) {
     return new Sum(this, other);
@@ -42,22 +28,13 @@ public interface Dim {
   class Fixed implements Dim {
     float value;
 
-    public React<Float> create() {
+    @Override
+    public React<Float> create(ListReact<React<Float>> children, React<Float> space, boolean isMajorAxis) {
       return fp(value);
     }
 
     @Override
-    public CreateResult create(React<Float> space, boolean isMajorAxis) {
-      return new CreateResult(create(), null, null);
-    }
-
-    @Override
     public boolean isIndependent() {
-      return true;
-    }
-
-    @Override
-    public boolean isIndependentOnChildren() {
       return true;
     }
   }
@@ -66,22 +43,13 @@ public interface Dim {
   class ReactFixed implements Dim {
     React<Float> value;
 
-    public React<Float> create() {
+    @Override
+    public React<Float> create(ListReact<React<Float>> children, React<Float> space, boolean isMajorAxis) {
       return value;
     }
 
     @Override
-    public CreateResult create(React<Float> space, boolean isMajorAxis) {
-      return new CreateResult(create(), null, null);
-    }
-
-    @Override
     public boolean isIndependent() {
-      return true;
-    }
-
-    @Override
-    public boolean isIndependentOnChildren() {
       return true;
     }
   }
@@ -90,23 +58,14 @@ public interface Dim {
   class Flex implements Dim {
     float value;
 
-    public React<Float> create(React<Float> space) {
-      return react(space, v -> v * value);
-    }
-
     @Override
-    public CreateResult create(React<Float> space, boolean isMajorAxis) {
-      return new CreateResult(create(space), null, null);
+    public React<Float> create(ListReact<React<Float>> children, React<Float> space, boolean isMajorAxis) {
+      return react(space, v -> v * value);
     }
 
     @Override
     public boolean isIndependent() {
       return false;
-    }
-
-    @Override
-    public boolean isIndependentOnChildren() {
-      return true;
     }
   }
 
@@ -114,7 +73,8 @@ public interface Dim {
   class ReactFlex implements Dim {
     React<Float> react;
 
-    public React<Float> create(React<Float> space) {
+    @Override
+    public React<Float> create(ListReact<React<Float>> children, React<Float> space, boolean isMajorAxis) {
       return react(
         fn((Float a, Float b) -> a * b),
         space, react
@@ -122,18 +82,8 @@ public interface Dim {
     }
 
     @Override
-    public CreateResult create(React<Float> space, boolean isMajorAxis) {
-      return new CreateResult(create(space), null, null);
-    }
-
-    @Override
     public boolean isIndependent() {
       return false;
-    }
-
-    @Override
-    public boolean isIndependentOnChildren() {
-      return true;
     }
   }
 
@@ -145,63 +95,30 @@ public interface Dim {
       return "Min";
     }
 
-    public MinReact create(boolean isMajorAxis) {
-      return new MinReact(isMajorAxis);
-    }
-
     @Override
-    public CreateResult create(React<Float> space, boolean isMajorAxis) {
-      val minReact = create(isMajorAxis);
-      return new CreateResult(minReact, minReact::add, minReact::remove);
+    public React<Float> create(ListReact<React<Float>> children, React<Float> space, boolean isMajorAxis) {
+      return listDepend(
+        react(
+          children, childLengths -> {
+            var length = 0F;
+            for (val childLength : childLengths) {
+              val reactSize = childLength.peek();
+              if (isMajorAxis) {
+                length += reactSize;
+              } else if (reactSize > length) {
+                length = reactSize;
+              }
+            }
+            return length;
+          }
+        ),
+        children
+      );
     }
 
     @Override
     public boolean isIndependent() {
       return true;
-    }
-
-    @Override
-    public boolean isIndependentOnChildren() {
-      return false;
-    }
-
-    public static class MinReact extends CalcReact<Float> {
-      private final boolean isMajorAxis;
-      private final List<React<Float>> reacts;
-
-      public MinReact(boolean isMajorAxis) {
-        this.isMajorAxis = isMajorAxis;
-        reacts = new ArrayList<>();
-        super(Objects::equals);
-      }
-
-      @Override
-      protected Float calculate() {
-        var size = 0F;
-        for (val react : reacts) {
-          val reactSize = react.peek();
-          if (isMajorAxis) {
-            size += reactSize;
-          } else if (reactSize > size) {
-            size = reactSize;
-          }
-        }
-        return size;
-      }
-
-      @SafeVarargs
-      public final void add(React<Float>... reacts) {
-        Collections.addAll(this.reacts, reacts);
-        dependsOn(reacts);
-        forceUpdate();
-      }
-
-      @SafeVarargs
-      public final void remove(React<Float>... reacts) {
-        this.reacts.removeAll(Arrays.asList(reacts));
-        cancelDependencies(reacts);
-        forceUpdate();
-      }
     }
   }
 
@@ -210,32 +127,17 @@ public interface Dim {
     Dim a, b;
 
     @Override
-    public CreateResult create(React<Float> space, boolean isMajorAxis) {
-      val resultA = a.create(space, isMajorAxis);
-      val resultB = b.create(space, isMajorAxis);
-      val ar = resultA.react;
-      val br = resultA.react;
-      return new CreateResult(
-        react(fn(Float::sum), ar, br),
-        x -> {
-          resultA.addReacts.accept(x);
-          resultB.addReacts.accept(x);
-        },
-        x -> {
-          resultA.removeReacts.accept(x);
-          resultB.removeReacts.accept(x);
-        }
+    public React<Float> create(ListReact<React<Float>> children, React<Float> space, boolean isMajorAxis) {
+      return react(
+        fn(Float::sum),
+        a.create(children, space, isMajorAxis),
+        b.create(children, space, isMajorAxis)
       );
     }
 
     @Override
     public boolean isIndependent() {
       return a.isIndependent() && b.isIndependent();
-    }
-
-    @Override
-    public boolean isIndependentOnChildren() {
-      return a.isIndependentOnChildren() && b.isIndependentOnChildren();
     }
   }
 
@@ -245,28 +147,21 @@ public interface Dim {
     React<Float> b;
 
     @Override
-    public CreateResult create(React<Float> space, boolean isMajorAxis) {
-      val resultA = a.create(space, isMajorAxis);
-      val ar = resultA.react;
-      return resultA.withReact(react(fn(Float::sum), ar, b));
+    public React<Float> create(ListReact<React<Float>> children, React<Float> space, boolean isMajorAxis) {
+      return react(fn(Float::sum), a.create(children, space, isMajorAxis), b);
     }
 
     @Override
     public boolean isIndependent() {
       return a.isIndependent();
     }
-
-    @Override
-    public boolean isIndependentOnChildren() {
-      return a.isIndependentOnChildren();
-    }
   }
 
   Fixed ZERO = new Fixed(0F);
-
-  React<Float> ZERO_REACT = ZERO.create();
-
   Flex UNIT = new Flex(1F);
+  ConstReact<Float> FP_0 = constant(0F);
+  ConstReact<Float> FP_0_5 = constant(0.5F);
+  ConstReact<Float> FP_1 = constant(1F);
 
   static Fixed fixed(float value) {
     return value == 0F ? ZERO : new Fixed(value);
@@ -286,18 +181,6 @@ public interface Dim {
 
   static ReactFixed px(React<Float> value) {
     return fixed(value);
-  }
-
-  static React<Float> fixedHook(float value) {
-    return value == 0F ? ZERO_REACT : fixed(value).create();
-  }
-
-  static React<Float> zeroHook() {
-    return ZERO_REACT;
-  }
-
-  static React<Float> pxHook(float value) {
-    return fixedHook(value);
   }
 
   static Flex flex(float value) {
@@ -329,6 +212,9 @@ public interface Dim {
   }
 
   static ConstReact<Float> fp(float v) {
-    return constant(v);
+    return v == 0F ? FP_0 :
+           v == 1F ? FP_1 :
+           v == 0.5F ? FP_0_5 :
+           constant(v);
   }
 }
