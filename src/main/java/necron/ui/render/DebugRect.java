@@ -1,5 +1,6 @@
 package necron.ui.render;
 
+import lombok.Value;
 import lombok.With;
 import net.minecraft.client.DeltaTracker;
 import net.minecraft.client.gui.GuiGraphics;
@@ -7,12 +8,12 @@ import org.joml.Vector2f;
 import org.joml.Vector2fc;
 
 @With
-public record DebugRect(
-  Vector2fc nw,
-  Vector2fc se,
-  float elevation,
-  float opacity
-) implements Renderable {
+@Value
+public class DebugRect implements Renderable {
+  Vector2fc nw, se;
+
+  float elevation, opacity;
+
   @Override
   public Renderable opacify(float factor) {
     return withOpacity(opacity * factor);

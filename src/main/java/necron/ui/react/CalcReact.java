@@ -5,7 +5,11 @@ import lombok.Data;
 import lombok.val;
 import necron.ui.util.SmartClosable;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Queue;
+import java.util.Set;
+import java.util.function.BiPredicate;
 
 import static yqloss.E._cast;
 
@@ -17,19 +21,19 @@ public abstract class CalcReact<T> extends SerialReact<T> implements SmartClosab
     public long serial;
   }
 
-  private final HookFunction<?> hookFunction = (_, _) -> forceUpdate();
+  private final HookFn<?> hookFn = (_, _) -> forceUpdate();
   private final List<AutoCloseable> hooks = new ArrayList<>();
   private final List<Dependency> dependencies = new ArrayList<>();
-  private final boolean checkForEquals;
+  private final BiPredicate<? super T, ? super T> equals;
   private T value;
 
-  protected CalcReact(boolean checkForEquals) {
-    this.checkForEquals = checkForEquals;
+  protected CalcReact(BiPredicate<? super T, ? super T> equals) {
+    this.equals = equals;
     value = calculate();
   }
 
-  protected CalcReact(boolean checkForEquals, T initial) {
-    this.checkForEquals = checkForEquals;
+  protected CalcReact(BiPredicate<? super T, ? super T> equals, T initial) {
+    this.equals = equals;
     value = initial;
   }
 
@@ -59,7 +63,7 @@ public abstract class CalcReact<T> extends SerialReact<T> implements SmartClosab
 
   public final CalcReact<T> listensTo(React<?>... reacts) {
     for (val react : reacts) {
-      hooks.add(react.hook(_cast(hookFunction)));
+      hooks.add(react.hook(_cast(hookFn)));
     }
     return this;
   }
@@ -67,7 +71,7 @@ public abstract class CalcReact<T> extends SerialReact<T> implements SmartClosab
   public void forceUpdate() {
     val oldValue = value;
     val newValue = calculate();
-    if (checkForEquals && Objects.equals(oldValue, newValue)) {
+    if (equals != null && equals.test(oldValue, newValue)) {
       return;
     }
     markDirty();

@@ -1,5 +1,6 @@
 package necron.ui.react;
 
-public interface HookFunction<T> {
+@FunctionalInterface
+public interface HookFn<T> {
   void onChange(T oldValue, T newValue);
 }

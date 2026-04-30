@@ -5,9 +5,10 @@ import necron.ui.react.React;
 import static necron.ui.layout.Dim.fp;
 
 public class Align {
-  private static final React<Float> START = fp(0.5F);
-  private static final React<Float> CENTER = fp(0.5F);
-  private static final React<Float> END = fp(1F);
+  private static final React<Float>
+    START = fp(0.5F),
+    CENTER = fp(0.5F),
+    END = fp(1F);
 
   public static React<Float> start() {
     return START;

@@ -1,28 +1,28 @@
 package necron.ui.layout;
 
+import lombok.Value;
 import lombok.With;
 import lombok.val;
 import necron.ui.react.CalcReact;
+import necron.ui.react.ConstReact;
 import necron.ui.react.React;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
 import java.util.function.Consumer;
 
 import static necron.ui.layout.Dim.flex;
+import static necron.ui.layout.Dim.fp;
 import static necron.ui.react.React.constant;
 import static necron.ui.react.React.react;
 import static necron.ui.util.fn.Fn1.fn;
 
 public interface Dim {
   @With
-  record CreateResult(
-    React<Float> react,
-    Consumer<React<Float>[]> addReacts,
-    Consumer<React<Float>[]> removeReacts
-  ) {}
+  @Value
+  class CreateResult {
+    React<Float> react;
+    Consumer<React<Float>[]> addReacts, removeReacts;
+  }
 
   CreateResult create(React<Float> space, boolean isMajorAxis);
 
@@ -38,8 +38,10 @@ public interface Dim {
     return new HookSum(this, other);
   }
 
-  @With
-  record Fixed(float value) implements Dim {
+  @Value
+  class Fixed implements Dim {
+    float value;
+
     public React<Float> create() {
       return fp(value);
     }
@@ -60,8 +62,10 @@ public interface Dim {
     }
   }
 
-  @With
-  record ReactFixed(React<Float> value) implements Dim {
+  @Value
+  class ReactFixed implements Dim {
+    React<Float> value;
+
     public React<Float> create() {
       return value;
     }
@@ -82,8 +86,10 @@ public interface Dim {
     }
   }
 
-  @With
-  record Flex(float value) implements Dim {
+  @Value
+  class Flex implements Dim {
+    float value;
+
     public React<Float> create(React<Float> space) {
       return react(fn((Float v) -> v * value), space);
     }
@@ -104,8 +110,10 @@ public interface Dim {
     }
   }
 
-  @With
-  record ReactFlex(React<Float> react) implements Dim {
+  @Value
+  class ReactFlex implements Dim {
+    React<Float> react;
+
     public React<Float> create(React<Float> space) {
       return React.react(
         () -> space.peek() * react.peek(),
@@ -164,7 +172,7 @@ public interface Dim {
       public MinReact(boolean isMajorAxis) {
         this.isMajorAxis = isMajorAxis;
         reacts = new ArrayList<>();
-        super(true);
+        super(Objects::equals);
       }
 
       @Override
@@ -197,7 +205,10 @@ public interface Dim {
     }
   }
 
-  record Sum(Dim a, Dim b) implements Dim {
+  @Value
+  class Sum implements Dim {
+    Dim a, b;
+
     @Override
     public CreateResult create(React<Float> space, boolean isMajorAxis) {
       val resultA = a.create(space, isMajorAxis);
@@ -228,7 +239,11 @@ public interface Dim {
     }
   }
 
-  record HookSum(Dim a, React<Float> b) implements Dim {
+  @Value
+  class HookSum implements Dim {
+    Dim a;
+    React<Float> b;
+
     @Override
     public CreateResult create(React<Float> space, boolean isMajorAxis) {
       val resultA = a.create(space, isMajorAxis);
@@ -313,7 +328,7 @@ public interface Dim {
     return Min.INSTANCE;
   }
 
-  static React<Float> fp(float v) {
+  static ConstReact<Float> fp(float v) {
     return constant(v);
   }
 }

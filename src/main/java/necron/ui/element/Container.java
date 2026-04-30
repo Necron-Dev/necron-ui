@@ -3,13 +3,12 @@ package necron.ui.element;
 import lombok.val;
 import necron.ui.context.Context;
 import necron.ui.event.Event;
+import necron.ui.react.ListReact;
 import necron.ui.react.React;
 import necron.ui.request.Request;
 
-import java.util.List;
-
 public interface Container extends Element {
-  List<Element> children();
+  ListReact<? extends Element> getChildren();
 
   React<Float> getHorizontalSpace();
 
@@ -17,7 +16,7 @@ public interface Container extends Element {
 
   @Override
   default boolean dispatch(Context context, Event event, boolean handled) {
-    for (val child : children()) {
+    for (val child : getChildren().peek()) {
       handled |= child.dispatch(context, event, handled);
     }
     return handled;

@@ -1,10 +1,7 @@
 package necron.ui.animation;
 
 public class CachedEase implements Ease {
-  private final Ease ease;
-  private final Ease in;
-  private final Ease out;
-  private final Ease inOut;
+  private final Ease ease, in, out, inOut;
 
   public CachedEase(Ease ease) {
     this.ease = ease;

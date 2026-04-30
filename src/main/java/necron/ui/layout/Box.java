@@ -1,24 +1,22 @@
 package necron.ui.layout;
 
+import lombok.Value;
 import lombok.With;
 import necron.ui.react.React;
 
 public class Box {
   @With
-  public record Size(
-    Dim width,
-    Dim height
-  ) {}
+  @Value
+  public static class Size {
+    Dim width, height;
+  }
 
   @With
-  public record SizePadding(
-    Dim width,
-    Dim height,
-    React<Float> paddingTop,
-    React<Float> paddingRight,
-    React<Float> paddingBottom,
-    React<Float> paddingLeft
-  ) {
+  @Value
+  public static class SizePadding {
+    Dim width, height;
+    React<Float> paddingTop, paddingRight, paddingBottom, paddingLeft;
+
     public Size asSize() {
       return new Size(width, height);
     }

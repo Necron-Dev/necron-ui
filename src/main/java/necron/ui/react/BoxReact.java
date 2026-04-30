@@ -3,11 +3,11 @@ package necron.ui.react;
 import lombok.AllArgsConstructor;
 import lombok.val;
 
-import java.util.Objects;
+import java.util.function.BiPredicate;
 
 @AllArgsConstructor
 public class BoxReact<T> extends SerialReact<T> {
-  private final boolean checkForEquals;
+  private final BiPredicate<? super T, ? super T> equals;
   private T value;
 
   @Override
@@ -17,7 +17,7 @@ public class BoxReact<T> extends SerialReact<T> {
 
   public void set(T newValue) {
     val oldValue = value;
-    if (checkForEquals && Objects.equals(oldValue, newValue)) {
+    if (equals != null && equals.test(oldValue, newValue)) {
       return;
     }
     markDirty();

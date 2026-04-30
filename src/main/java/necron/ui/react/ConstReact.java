@@ -14,7 +14,7 @@ public class ConstReact<T> implements React<T> {
   }
 
   @Override
-  public AutoCloseable hook(HookFunction<? super T> hook) {
+  public AutoCloseable hook(HookFn<? super T> hook) {
     return dummyHook;
   }
 

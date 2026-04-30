@@ -11,8 +11,7 @@ import java.util.Map;
 import java.util.Objects;
 
 public class NecronUi {
-  public static final String ID;
-  public static final String VERSION;
+  public static final String ID, VERSION;
 
   public static Identifier identifier(String path) {
     return Identifier.fromNamespaceAndPath(ID, path);

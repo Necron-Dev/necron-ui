@@ -8,6 +8,5 @@ public enum Direction {
   VERTICAL(0, 1),
   ;
 
-  public final int x;
-  public final int y;
+  public final int x, y;
 }

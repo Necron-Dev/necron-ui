@@ -1,19 +1,21 @@
 package necron.ui.animation;
 
+import lombok.Value;
 import lombok.val;
 import necron.ui.Timestamp;
 import necron.ui.react.CalcReact;
 
 import java.util.ArrayDeque;
 import java.util.Deque;
+import java.util.Objects;
 
 public class Animation extends CalcReact<Float> {
-  private record EaseAction(
-    Ease ease,
-    float magnitude,
-    long start,
-    long durationNs
-  ) {}
+  @Value
+  private static class EaseAction {
+    Ease ease;
+    float magnitude;
+    long start, durationNs;
+  }
 
   private float base;
   private final Deque<EaseAction> actions;
@@ -21,7 +23,7 @@ public class Animation extends CalcReact<Float> {
   public Animation(float base) {
     this.base = base;
     actions = new ArrayDeque<>();
-    super(true);
+    super(Objects::equals);
     dependsOn(Timestamp.NANO_TIME);
   }
 

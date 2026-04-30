@@ -4,11 +4,12 @@ import necron.ui.context.Context;
 import necron.ui.event.Event;
 import necron.ui.layout.Elevation;
 import necron.ui.react.React;
+import necron.ui.react.WithKey;
 import necron.ui.util.SmartClosable;
 
 import java.util.Queue;
 
-public interface Element extends SmartClosable {
+public interface Element extends SmartClosable, WithKey {
   Container getParent();
 
   React<Float> getWidth();
