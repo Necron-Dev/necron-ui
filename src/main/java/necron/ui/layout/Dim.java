@@ -14,7 +14,7 @@ import static necron.ui.layout.Dim.flex;
 import static necron.ui.layout.Dim.fp;
 import static necron.ui.react.React.constant;
 import static necron.ui.react.React.react;
-import static necron.ui.util.fn.Fn1.fn;
+import static necron.ui.util.fn.Fn2.fn;
 
 public interface Dim {
   @With
@@ -91,7 +91,7 @@ public interface Dim {
     float value;
 
     public React<Float> create(React<Float> space) {
-      return react(fn((Float v) -> v * value), space);
+      return react(space, v -> v * value);
     }
 
     @Override
@@ -115,8 +115,8 @@ public interface Dim {
     React<Float> react;
 
     public React<Float> create(React<Float> space) {
-      return React.react(
-        () -> space.peek() * react.peek(),
+      return react(
+        fn((Float a, Float b) -> a * b),
         space, react
       );
     }
@@ -216,7 +216,7 @@ public interface Dim {
       val ar = resultA.react;
       val br = resultA.react;
       return new CreateResult(
-        React.react(() -> ar.peek() + br.peek(), ar, br),
+        react(fn(Float::sum), ar, br),
         x -> {
           resultA.addReacts.accept(x);
           resultB.addReacts.accept(x);
@@ -248,7 +248,7 @@ public interface Dim {
     public CreateResult create(React<Float> space, boolean isMajorAxis) {
       val resultA = a.create(space, isMajorAxis);
       val ar = resultA.react;
-      return resultA.withReact(React.react(() -> ar.peek() + b.peek(), ar, b));
+      return resultA.withReact(react(fn(Float::sum), ar, b));
     }
 
     @Override

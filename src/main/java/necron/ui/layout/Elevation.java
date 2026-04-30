@@ -5,12 +5,11 @@ import necron.ui.react.React;
 
 import static necron.ui.layout.Dim.fp;
 import static necron.ui.react.React.react;
-import static necron.ui.util.fn.Fn1.fn;
 import static necron.ui.util.fn.Fn2.fn;
 
 public class Elevation {
   public static React<Float> relative(Element parent, float value) {
-    return react(fn((Float p) -> p + value), parent.getElevation());
+    return react(parent.getElevation(), p -> p + value);
   }
 
   public static React<Float> relative(Element parent, React<Float> value) {

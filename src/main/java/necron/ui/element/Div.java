@@ -4,24 +4,28 @@ import lombok.Getter;
 import lombok.val;
 import necron.ui.NecronUi;
 import necron.ui.context.Context;
-import necron.ui.event.ContentEvent;
-import necron.ui.event.Event;
-import necron.ui.event.LayoutEvent;
-import necron.ui.event.RenderEvent;
+import necron.ui.event.*;
 import necron.ui.layout.Box;
 import necron.ui.layout.Dim;
 import necron.ui.layout.Direction;
 import necron.ui.react.CalcReact;
-import necron.ui.react.ListReact;
 import necron.ui.react.React;
+import necron.ui.react.SubListReact;
 import necron.ui.render.DebugRect;
 import org.joml.Vector2f;
+import org.joml.Vector2fc;
 
 import java.util.*;
 import java.util.function.Consumer;
+import java.util.function.Function;
+import java.util.function.Predicate;
 
 import static necron.ui.layout.Box.size;
+import static necron.ui.layout.Dim.fp;
 import static necron.ui.layout.Dim.px;
+import static necron.ui.react.React.*;
+import static necron.ui.util.fn.Fn2.fn;
+import static necron.ui.util.fn.Fn3.fn;
 
 public class Div extends Node implements Container {
   private final boolean widthIndependentOnChildren, heightIndependentOnChildren;
@@ -43,10 +47,12 @@ public class Div extends Node implements Container {
     heightWithPadding;
 
   @Getter
-  private final ListReact<? extends Element> children;
+  private final SubListReact<Element> children = subList();
 
   @Getter
   private final React<Float> alignment, horizontalSpace, verticalSpace;
+
+  private final WeakHashMap<Object, Vector2fc> cachedPositions = new WeakHashMap<>();
 
   private static class SpaceReact extends CalcReact<Float> {
     private final React<Float> length;
@@ -83,6 +89,33 @@ public class Div extends Node implements Container {
     }
   }
 
+  private React<Float> createSpaceReact(
+    React<Float> length,
+    boolean major,
+    Function<? super Element, ? extends React<Float>> elementLength,
+    Predicate<? super Element> elementIndependent
+  ) {
+    if (!major) return length;
+    val childrenLength = subList(
+      children,
+      x -> elementIndependent.test(x)
+           ? elementLength.apply(x)
+           : fp(0)
+    );
+    val spaceResult = react(
+      fn((Float lengthValue, List<React<Float>> listReact) -> {
+        var space = lengthValue;
+        for (val element : listReact) {
+          space -= element.peek();
+        }
+        return space;
+      }),
+      length, childrenLength
+    );
+    listDepend(spaceResult, childrenLength);
+    return spaceResult;
+  }
+
   public Div(
     Container parent,
     Object key,
@@ -105,23 +138,29 @@ public class Div extends Node implements Container {
     paddingRight = sizePadding.getPaddingRight();
     paddingBottom = sizePadding.getPaddingBottom();
     paddingLeft = sizePadding.getPaddingLeft();
+    this.alignment = alignment;
     super(parent, key, sizePadding.asSize(), elevation);
-    widthWithPadding = React.react(
-      () -> getWidth().peek() - paddingLeft.peek() - paddingRight.peek(),
+    widthWithPadding = react(
+      fn((Float w, Float l, Float r) -> w - l - r),
       getWidth(), paddingLeft, paddingRight
     );
-    heightWithPadding = React.react(
-      () -> getHeight().peek() - paddingTop.peek() - paddingBottom.peek(),
+    heightWithPadding = react(
+      fn((Float h, Float t, Float b) -> h - t - b),
       getHeight(), paddingTop, paddingBottom
     );
-    horizontalSpace = direction == Direction.HORIZONTAL
-                      ? new SpaceReact(getInnerWidth())
-                      : getInnerWidth();
-    verticalSpace = direction == Direction.VERTICAL
-                    ? new SpaceReact(getInnerHeight())
-                    : getInnerHeight();
-    this.alignment = alignment;
-    this.children = ChildrenConfiguration.buildChildren(this, children);
+    horizontalSpace = createSpaceReact(
+      getInnerWidth(),
+      direction == Direction.HORIZONTAL,
+      Element::getWidth,
+      Element::isWidthIndependent
+    );
+    verticalSpace = createSpaceReact(
+      getInnerHeight(),
+      direction == Direction.VERTICAL,
+      Element::getHeight,
+      Element::isHeightIndependent
+    );
+    this.children.setParent(ChildrenConfiguration.buildChildren(this, children), x -> x);
   }
 
   public static Div x(
@@ -163,7 +202,7 @@ public class Div extends Node implements Container {
     return result.getReact();
   }
 
-//  @SafeVarargs
+  //  @SafeVarargs
 //  public final Div add(Function<? super Div, ? extends Element>... constructors) {
 //    val widths = new ArrayList<React<Float>>(constructors.length);
 //    val heights = new ArrayList<React<Float>>(constructors.length);
@@ -175,12 +214,6 @@ public class Div extends Node implements Container {
 //        widths.add(element.getWidth());
 //      if (element.isHeightIndependent() || heightIndependentOnChildren)
 //        heights.add(element.getHeight());
-//      if (element.isWidthIndependent())
-//        independentWidths.add(element.getWidth());
-//      if (element.isHeightIndependent())
-//        independentHeights.add(element.getHeight());
-
-  /// /      children.add(element);
 //    }
 //    val widthArray = widths.toArray(new React[0]);
 //    val heightArray = heights.toArray(new React[0]);
@@ -189,12 +222,6 @@ public class Div extends Node implements Container {
 //    }
 //    for (val callback : addHeightCallbacks) {
 //      callback.accept(_cast(heightArray));
-//    }
-//    if (horizontalSpace instanceof SpaceReact space) {
-//      space.add(_cast(independentWidths.toArray(new React[0])));
-//    }
-//    if (verticalSpace instanceof SpaceReact space) {
-//      space.add(_cast(independentHeights.toArray(new React[0])));
 //    }
 //    return this;
 //  }
@@ -205,27 +232,19 @@ public class Div extends Node implements Container {
         children.get();
       }
 
-      case LayoutEvent _ -> {
+      case MetricsEvent _ -> {
         updateMetrics(context, event, handled);
         Container.super.dispatch(context, event, handled);
         updateMetrics(context, event, handled);
         return false;
       }
 
-      case RenderEvent renderEvent -> {
-        super.dispatch(context, event, handled);
+      case PositionEvent _ -> {
+        cachedPositions.clear();
         val innerWidth = getInnerWidth().peek();
         val innerHeight = getInnerHeight().peek();
         val x = paddingLeft.peek();
         val y = paddingTop.peek();
-        if (NecronUi.isDebugMode()) {
-          renderEvent.getYieldRenderable().accept(new DebugRect(
-            new Vector2f(x, y),
-            new Vector2f(x + innerWidth, y + innerHeight),
-            getElevation().peek(),
-            1F
-          ));
-        }
         val crossSpace = cross(innerWidth, innerHeight);
         var accumulated = 0F;
         for (val child : getChildren().peek()) {
@@ -235,13 +254,35 @@ public class Div extends Node implements Container {
           val cross = (crossSpace - crossSize) * alignment.peek();
           val childX = x + major(major, cross);
           val childY = y + cross(major, cross);
-          val childEvent = new RenderEvent(
-            renderable -> renderEvent.getYieldRenderable().accept(
-              renderable.translate(new Vector2f(childX, childY))
-            )
-          );
-          child.dispatch(context, childEvent, false);
+          cachedPositions.put(child.getKey(), new Vector2f(childX, childY));
           accumulated += majorSize;
+        }
+      }
+
+      case RenderEvent renderEvent -> {
+        if (NecronUi.isDebugMode()) {
+          val innerWidth = getInnerWidth().peek();
+          val innerHeight = getInnerHeight().peek();
+          val x = paddingLeft.peek();
+          val y = paddingTop.peek();
+          renderEvent.getYieldRenderable().accept(new DebugRect(
+            new Vector2f(x, y),
+            new Vector2f(x + innerWidth, y + innerHeight),
+            getElevation().peek(),
+            1F
+          ));
+        }
+        for (val child : getChildren().peek()) {
+          val pos = cachedPositions.get(child.getKey());
+          child.dispatch(
+            context,
+            new RenderEvent(
+              renderable -> renderEvent.getYieldRenderable().accept(
+                renderable.translate(pos)
+              )
+            ),
+            false
+          );
         }
         return false;
       }

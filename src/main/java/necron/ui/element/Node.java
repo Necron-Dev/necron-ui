@@ -5,7 +5,7 @@ import lombok.val;
 import necron.ui.NecronUi;
 import necron.ui.context.Context;
 import necron.ui.event.Event;
-import necron.ui.event.LayoutEvent;
+import necron.ui.event.MetricsEvent;
 import necron.ui.event.RenderEvent;
 import necron.ui.layout.Box;
 import necron.ui.layout.Dim;
@@ -43,7 +43,7 @@ public class Node implements Element {
   @Override
   public boolean dispatch(Context context, Event event, boolean handled) {
     switch (event) {
-      case LayoutEvent _ -> {
+      case MetricsEvent _ -> {
         width.get();
         height.get();
         elevation.get();

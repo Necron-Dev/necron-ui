@@ -8,14 +8,12 @@ import necron.ui.util.fn.Fn2;
 
 import java.util.function.Consumer;
 
-import static yqloss.E.$also;
-
 @FunctionalInterface
 public interface ChildrenConfiguration {
   ChildrenBuilder getChildrenBuilder(ChildrenContext context);
 
   class ChildrenContext {
-    public Consumer<? super CalcListReact<? super Element>> configure = null;
+    public Consumer<? super CalcListReact<? super Element>> configure = _ -> {};
   }
 
   @FunctionalInterface
@@ -49,7 +47,7 @@ public interface ChildrenConfiguration {
         });
       });
     });
-    $also(context.configure, x -> x.accept(react));
+    context.configure.accept(react);
     return react;
   }
 }

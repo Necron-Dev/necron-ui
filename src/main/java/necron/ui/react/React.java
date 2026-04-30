@@ -24,12 +24,24 @@ public interface React<T> extends Supplier<T> {
 
   long getSerial();
 
+  static UpdaterReact updater() {
+    return new UpdaterReact();
+  }
+
   static <T> ConstReact<T> of(T value) {
     return new ConstReact<>(value);
   }
 
   static <T> ConstReact<T> constant(T value) {
     return of(value);
+  }
+
+  static <T> BoxReact<T> box(BiPredicate<? super T, ? super T> equals, T value) {
+    return new BoxReact<>(equals, value);
+  }
+
+  static <T> BoxReact<T> box(T value) {
+    return box(Objects::equals, value);
   }
 
   static <T> CalcReact<T> react(
@@ -43,6 +55,19 @@ public interface React<T> extends Supplier<T> {
         return value.get();
       }
     }.dependsOn(dependencies);
+  }
+
+  static <A, T> CalcReact<T> react(
+    BiPredicate<? super T, ? super T> equals,
+    React<? extends A> dependency,
+    Function<? super A, ? extends T> value
+  ) {
+    return new CalcReact<T>(equals) {
+      @Override
+      protected T calculate() {
+        return value.apply(dependency.peek());
+      }
+    }.dependsOn(dependency);
   }
 
   static <T> CalcReact<T> react(
@@ -60,6 +85,13 @@ public interface React<T> extends Supplier<T> {
         return value.call(values);
       }, dependencies
     );
+  }
+
+  static <A, T> CalcReact<T> react(
+    React<? extends A> dependency,
+    Function<? super A, ? extends T> value
+  ) {
+    return react(Objects::equals, dependency, value);
   }
 
   static <T> CalcReact<T> react(
@@ -89,6 +121,19 @@ public interface React<T> extends Supplier<T> {
     }.listensTo(dependencies);
   }
 
+  static <A, T> CalcReact<T> listen(
+    BiPredicate<? super T, ? super T> equals,
+    React<? extends A> dependency,
+    Function<? super A, ? extends T> value
+  ) {
+    return new CalcReact<T>(equals) {
+      @Override
+      protected T calculate() {
+        return value.apply(dependency.peek());
+      }
+    }.listensTo(dependency);
+  }
+
   static <T> CalcReact<T> listen(
     BiPredicate<? super T, ? super T> equals,
     Fn<? extends T> value,
@@ -113,6 +158,13 @@ public interface React<T> extends Supplier<T> {
     return listen(Objects::equals, value, dependencies);
   }
 
+  static <A, T> CalcReact<T> listen(
+    React<? extends A> dependency,
+    Function<? super A, ? extends T> value
+  ) {
+    return listen(Objects::equals, dependency, value);
+  }
+
   static <T> CalcReact<T> listen(
     Fn<? extends T> value,
     React<?>... dependencies
@@ -120,11 +172,15 @@ public interface React<T> extends Supplier<T> {
     return listen(Objects::equals, value, dependencies);
   }
 
+  static <T> SubListReact<T> subList() {
+    return new SubListReact<>();
+  }
+
   static <V, T> SubListReact<T> subList(
     ListReact<? extends V> parent,
     Function<? super V, ? extends T> transformer
   ) {
-    return new SubListReact<>(parent, transformer);
+    return React.<T>subList().setParent(parent, transformer);
   }
 
   static <T extends WithKey> CalcListReact<T> calcList(
@@ -142,5 +198,21 @@ public interface React<T> extends Supplier<T> {
         );
       }
     };
+  }
+
+  static void listDepend(
+    CalcReact<?> calcReact,
+    ListReact<? extends React<?>> list
+  ) {
+    list
+      .hookingInsert((_, react) -> calcReact.dependsOn(react))
+      .hookingRemove((_, react) -> calcReact.cancelDependencies(react));
+  }
+
+  static void listListen(
+    CalcReact<?> calcReact,
+    ListReact<? extends React<?>> list
+  ) {
+    list.hookingInsert((_, react) -> calcReact.listensTo(react));
   }
 }
