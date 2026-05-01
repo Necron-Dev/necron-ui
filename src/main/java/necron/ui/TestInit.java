@@ -23,7 +23,6 @@ import net.minecraft.network.chat.Component;
 import java.util.ArrayList;
 import java.util.Comparator;
 
-import static necron.ui.layout.Align.center;
 import static necron.ui.layout.Axis.X;
 import static necron.ui.layout.Box.box;
 import static necron.ui.layout.Box.size;
@@ -54,7 +53,7 @@ public class TestInit implements ClientModInitializer {
   );
 
   private final Div div = new Div(
-    null, _id, box(min(), min()), fp(0), X, center(),
+    null, _id, box(min(), min()), fp(0), X, fp(0.5F),
     _ -> dsl -> {
       dsl.add(_id, (p, k) -> new Node(p, k, size(px(animation), px(animation)), p.up(0)));
       dsl.add(_id, (p, k) -> new Node(p, k, size(px(200), flex()), p.up(0)));
