@@ -6,10 +6,8 @@ import necron.ui.animation.Ease;
 import necron.ui.context.Context;
 import necron.ui.element.Div;
 import necron.ui.element.Node;
-import necron.ui.event.ContentEvent;
-import necron.ui.event.MetricsEvent;
-import necron.ui.event.PositionEvent;
-import necron.ui.event.RenderEvent;
+import necron.ui.element.RoundedRectNode;
+import necron.ui.event.*;
 import necron.ui.react.CalcReact;
 import necron.ui.react.UpdaterReact;
 import necron.ui.render.Renderable;
@@ -27,6 +25,8 @@ import static necron.ui.layout.Axis.X;
 import static necron.ui.layout.Box.box;
 import static necron.ui.layout.Box.size;
 import static necron.ui.layout.Dim.*;
+import static necron.ui.layout.Pos.anchor;
+import static necron.ui.layout.Pos.auto;
 import static necron.ui.react.React.*;
 import static yqloss.E.*;
 
@@ -53,10 +53,22 @@ public class TestInit implements ClientModInitializer {
   );
 
   private final Div div = new Div(
-    null, _id, box(min(), min()), fp(0), X, fp(0.5F),
+    null, _id, box(min(), min(), 100), auto(), fp(0), X, fp(0.5F),
     _ -> dsl -> {
-      dsl.add(_id, (p, k) -> new Node(p, k, size(px(animation), px(animation)), p.up(0)));
-      dsl.add(_id, (p, k) -> new Node(p, k, size(px(200), flex()), p.up(0)));
+      dsl.add(
+        _id, (p, k) -> new RoundedRectNode(
+          p, k,
+          size(px(p.getWidth()), px(p.getHeight())),
+          anchor(0, 0, 0, 0, 0, 0),
+          p.up(0),
+          fp(4),
+          useConst(0xFFFFFFFF)
+        )
+      );
+      dsl.add(_id, (p, k) -> new Node(p, k, size(px(50), px(50)), auto(), p.up(1)));
+      dsl.add(_id, (p, k) -> new Node(p, k, size(px(50), px(50)), anchor(0.5F, 0.5F, 0.5F, 0.5F, 0, 0), p.up(1)));
+      dsl.add(_id, (p, k) -> new Node(p, k, size(px(animation), px(animation)), auto(), p.up(1)));
+      dsl.add(_id, (p, k) -> new Node(p, k, size(px(200), flex()), auto(), p.up(1)));
     }
   );
 
@@ -80,6 +92,7 @@ public class TestInit implements ClientModInitializer {
     div.dispatch(ctx, MetricsEvent.INSTANCE, false);
     div.dispatch(ctx, MetricsEvent.INSTANCE, false);
     div.dispatch(ctx, PositionEvent.INSTANCE, false);
+    div.dispatch(ctx, UpdateEvent.INSTANCE, false);
     val renderables = new ArrayList<Renderable>();
     div.dispatch(ctx, new RenderEvent(renderables::add), false);
     renderables.sort(Comparator.comparing(Renderable::getElevation));

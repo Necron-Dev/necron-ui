@@ -2,6 +2,8 @@ package necron.ui.render;
 
 import lombok.Value;
 import lombok.With;
+import lombok.val;
+import necron.ui.Lazy;
 import net.minecraft.client.DeltaTracker;
 import net.minecraft.client.gui.GuiGraphics;
 import org.joml.Vector2f;
@@ -11,13 +13,7 @@ import org.joml.Vector2fc;
 @Value
 public class DebugRect implements Renderable {
   Vector2fc nw, se;
-
-  float elevation, opacity;
-
-  @Override
-  public Renderable opacify(float factor) {
-    return withOpacity(opacity * factor);
-  }
+  int color;
 
   @Override
   public Renderable scale(Vector2fc origin, float factor) {
@@ -33,17 +29,21 @@ public class DebugRect implements Renderable {
 
   @Override
   public float getElevation() {
-    return elevation;
+    return Float.POSITIVE_INFINITY;
   }
 
   @Override
   public void render(GuiGraphics gui, DeltaTracker delta) {
+    val guiScale = Lazy.MC.getWindow().getGuiScale();
+    gui.pose().pushMatrix();
+    gui.pose().scale(1F / guiScale);
     gui.renderOutline(
-      (int) nw.x(),
-      (int) nw.y(),
-      (int) (se.x() - nw.x()),
-      (int) (se.y() - nw.y()),
-      -1
+      (int) (guiScale * nw.x()),
+      (int) (guiScale * nw.y()),
+      (int) (guiScale * (se.x() - nw.x())),
+      (int) (guiScale * (se.y() - nw.y())),
+      color
     );
+    gui.pose().popMatrix();
   }
 }

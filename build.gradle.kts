@@ -3,15 +3,15 @@ val modId = "necron-ui"
 val version = "0.0.1"
 
 val lombokVersion = "1.18.46"
-val enchantedJavaLibraryVersion = "0.5.0"
+val enchantedJavaLibraryVersion = "0.6.0"
 val minecraftVersion = "1.21.11"
 val parchmentVersion = "2025.12.20"
-val fabricLoaderVersion = "0.19.1"
+val fabricLoaderVersion = "0.19.2"
 val fabricApiVersion = "0.141.3+1.21.11"
 
 plugins {
   val loomVersion = "1.15-SNAPSHOT"
-  val enchantedJavaPluginVersion = "0.5.0"
+  val enchantedJavaPluginVersion = "0.6.0"
   id("net.fabricmc.fabric-loom-remap") version loomVersion
   id("net.yqloss.enchanted-java-plugin") version enchantedJavaPluginVersion
 }

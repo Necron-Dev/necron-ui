@@ -55,6 +55,21 @@ public interface Dim {
   }
 
   @Value
+  class Dependent implements Dim {
+    React<Float> value;
+
+    @Override
+    public React<Float> create(ListReact<React<Float>> children, React<Float> space, boolean isMajorAxis) {
+      return value;
+    }
+
+    @Override
+    public boolean isIndependent() {
+      return false;
+    }
+  }
+
+  @Value
   class Flex implements Dim {
     float value;
 
@@ -169,6 +184,10 @@ public interface Dim {
 
   static ReactFixed px(React<Float> value) {
     return new ReactFixed(value);
+  }
+
+  static Dependent dependent(React<Float> value) {
+    return new Dependent(value);
   }
 
   static Flex flex(float value) {

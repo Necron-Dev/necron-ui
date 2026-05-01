@@ -1,6 +1,7 @@
 package necron.ui.element;
 
 import lombok.Getter;
+import lombok.Value;
 import lombok.val;
 import necron.ui.NecronUi;
 import necron.ui.context.Context;
@@ -8,23 +9,26 @@ import necron.ui.event.*;
 import necron.ui.layout.Axis;
 import necron.ui.layout.Box;
 import necron.ui.layout.Dim;
+import necron.ui.layout.Pos;
+import necron.ui.react.BoxReact;
 import necron.ui.react.React;
 import necron.ui.react.SubListReact;
+import necron.ui.react.SubReact;
 import necron.ui.render.DebugRect;
 import org.joml.Vector2f;
-import org.joml.Vector2fc;
 
 import java.util.List;
-import java.util.WeakHashMap;
 import java.util.function.Function;
 import java.util.function.Predicate;
 
 import static necron.ui.layout.Box.size;
 import static necron.ui.layout.Dim.fp;
 import static necron.ui.layout.Dim.px;
+import static necron.ui.layout.Pos.auto;
 import static necron.ui.react.React.*;
 import static necron.ui.util.fn.Fn2.fn;
 import static necron.ui.util.fn.Fn3.fn;
+import static necron.ui.util.fn.Fn4.fn;
 import static yqloss.E.$;
 
 public class Div extends Node implements Container {
@@ -44,7 +48,7 @@ public class Div extends Node implements Container {
   @Getter
   private final React<Float> alignment, horizontalSpace, verticalSpace;
 
-  private final WeakHashMap<Object, Vector2fc> cachedPositions = new WeakHashMap<>();
+  private final React<?> horizontalPositions, verticalPositions;
 
   private React<Float> createSpaceReact(
     React<Float> length,
@@ -55,7 +59,7 @@ public class Div extends Node implements Container {
     if (!major) return length;
     val childrenLength = useSubList(
       children,
-      x -> elementIndependent.test(x)
+      x -> x.getPositioning() instanceof Pos.Auto && elementIndependent.test(x)
            ? elementLength.apply(x)
            : fp(0)
     );
@@ -72,10 +76,67 @@ public class Div extends Node implements Container {
     );
   }
 
+  private React<?> createPositionReact(
+    boolean major,
+    React<Float> innerSize,
+    React<Float> padding,
+    Function<? super Element, ? extends React<Float>> getSize,
+    Function<? super Element, ? extends SubReact<Float>> getSubReact
+  ) {
+    if (major) {
+      @Value
+      class ElementAndBox {
+        Element element;
+        BoxReact<Float> box;
+      }
+      val autoElements = useSubList(
+        children,
+        x -> {
+          if (x.getPositioning() instanceof Pos.Auto) {
+            val box = useBox(0F);
+            getSubReact.apply(x).setParent(box, t -> t);
+            return new ElementAndBox(x, box);
+          }
+          return null;
+        }
+      );
+      return listDepend(
+        useCalc(
+          fn((List<ElementAndBox> items, Float paddingValue) -> {
+            var position = paddingValue;
+            for (val item : items) {
+              if (item == null) continue;
+              item.box.set(position);
+              position += getSize.apply(item.element).peek();
+            }
+            return null;
+          }),
+          autoElements, padding
+        ),
+        useSubList(children, getSize)
+      );
+    } else {
+      return useSubList(
+        children,
+        x -> {
+          if (x.getPositioning() instanceof Pos.Auto) {
+            val size = useCalc(
+              fn((Float i, Float s, Float a, Float p) -> (i - s) * a + p),
+              innerSize, getSize.apply(x), alignment, padding
+            );
+            getSubReact.apply(x).setParent(size, t -> t);
+          }
+          return null;
+        }
+      );
+    }
+  }
+
   public Div(
     Container parent,
     Object key,
     Box.SizePadding sizePadding,
+    Pos positioning,
     React<Float> elevation,
     Axis axis,
     React<Float> alignment,
@@ -92,16 +153,23 @@ public class Div extends Node implements Container {
     val width = sizePadding.getWidth();
     val height = sizePadding.getHeight();
     val list = this.children = useSubList();
-    val horizontal = useSubList(list, x -> x.isWidthIndependent() ? x.getWidth() : fp(0));
-    val vertical = useSubList(list, x -> x.isHeightIndependent() ? x.getHeight() : fp(0));
+    val horizontal = useSubList(
+      list,
+      x -> x.getPositioning() instanceof Pos.Auto && x.isWidthIndependent() ? x.getWidth() : fp(0)
+    );
+    val vertical = useSubList(
+      list,
+      x -> x.getPositioning() instanceof Pos.Auto && x.isHeightIndependent() ? x.getHeight() : fp(0)
+    );
     super(
       parent,
       key,
       width.create(horizontal, $(parent.getHorizontalSpace()), axis == Axis.X),
       height.create(vertical, $(parent.getVerticalSpace()), axis == Axis.Y),
-      elevation,
       width.isIndependent(),
-      height.isIndependent()
+      height.isIndependent(),
+      positioning,
+      elevation
     );
     widthWithPadding = useCalc(
       fn((Float w, Float l, Float r) -> w - l - r),
@@ -124,6 +192,20 @@ public class Div extends Node implements Container {
       Element::isHeightIndependent
     );
     this.children.setParent(ChildrenConfiguration.buildChildren(this, children), x -> x);
+    horizontalPositions = createPositionReact(
+      axis == Axis.X,
+      getInnerWidth(),
+      paddingLeft,
+      Element::getWidth,
+      Element::getX
+    );
+    verticalPositions = createPositionReact(
+      axis == Axis.Y,
+      getInnerHeight(),
+      paddingTop,
+      Element::getHeight,
+      Element::getY
+    );
   }
 
   public React<Float> getInnerWidth() {
@@ -149,26 +231,13 @@ public class Div extends Node implements Container {
       }
 
       case PositionEvent _ -> {
-        cachedPositions.clear();
-        val innerWidth = getInnerWidth().peek();
-        val innerHeight = getInnerHeight().peek();
-        val x = paddingLeft.peek();
-        val y = paddingTop.peek();
-        val crossSpace = cross(innerWidth, innerHeight);
-        var accumulated = 0F;
-        for (val child : getChildren().peek()) {
-          val majorSize = major(child.getWidth(), child.getHeight()).peek();
-          val crossSize = cross(child.getWidth(), child.getHeight()).peek();
-          val major = accumulated;
-          val cross = (crossSpace - crossSize) * alignment.peek();
-          val childX = x + major(major, cross);
-          val childY = y + cross(major, cross);
-          cachedPositions.put(child.getKey(), new Vector2f(childX, childY));
-          accumulated += majorSize;
-        }
+        super.dispatch(context, event, handled);
+        horizontalPositions.get();
+        verticalPositions.get();
       }
 
       case RenderEvent renderEvent -> {
+        super.dispatch(context, event, handled);
         if (NecronUi.isDebugMode()) {
           val innerWidth = getInnerWidth().peek();
           val innerHeight = getInnerHeight().peek();
@@ -177,17 +246,17 @@ public class Div extends Node implements Container {
           renderEvent.getYieldRenderable().accept(new DebugRect(
             new Vector2f(x, y),
             new Vector2f(x + innerWidth, y + innerHeight),
-            getElevation().peek(),
-            1F
+            getInnerDebugRectColor()
           ));
         }
         for (val child : getChildren().peek()) {
-          val pos = cachedPositions.get(child.getKey());
+          val x = child.getX().peek();
+          val y = child.getY().peek();
           child.dispatch(
             context,
             new RenderEvent(
               renderable -> renderEvent.getYieldRenderable().accept(
-                renderable.translate(pos)
+                renderable.translate(new Vector2f(x, y))
               )
             ),
             false
@@ -229,7 +298,17 @@ public class Div extends Node implements Container {
       axis == Axis.X
       ? size(length, px(0))
       : size(px(0), length),
+      auto(),
       getElevation()
     );
+  }
+
+  @Override
+  protected int getDebugRectColor() {
+    return 0xFF00FF00;
+  }
+
+  protected int getInnerDebugRectColor() {
+    return 0xFF00FFFF;
   }
 }
