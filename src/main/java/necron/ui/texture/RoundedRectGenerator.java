@@ -27,7 +27,7 @@ public class RoundedRectGenerator {
     val image = new BufferedImage(size, size, BufferedImage.TYPE_INT_ARGB);
     @Cleanup("dispose") val g = image.createGraphics();
     val unit = size >> 2;
-    val power = 4;
+    val power = 2;
     CornerFunc func = (x, y, s) -> {
       val xn = Math.pow((double) x / s, power);
       val yn = Math.pow((double) y / s, power);

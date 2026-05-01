@@ -57,7 +57,7 @@ public class TestInit implements ClientModInitializer {
   private final Div div = new Div(
     null, _id, box(min(), min(), 100), auto(), fp(0), X, fp(0.5F),
     _ -> dsl -> {
-      RoundedRect.background(dsl, animation2, useConst(0xFF111111));
+      RoundedRect.background(dsl, fp(64), useConst(0xFF111111));
       dsl.add(_id, (p, k) -> new Node(p, k, size(px(50), px(50)), auto(), p.up(1)));
       dsl.add(_id, (p, k) -> new Node(p, k, size(px(50), px(50)), anchor(0.5F, 0.5F, 0.5F, 0.5F, 0, 0), p.up(1)));
       dsl.add(_id, (p, k) -> new Node(p, k, size(px(animation), px(animation)), auto(), p.up(1)));

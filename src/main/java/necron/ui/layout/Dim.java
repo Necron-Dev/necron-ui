@@ -216,4 +216,8 @@ public interface Dim {
            v == 0.5F ? FP_0_5 :
            useConst(v);
   }
+
+  static ConstReact<Integer> color(int color) {
+    return useConst(color);
+  }
 }
