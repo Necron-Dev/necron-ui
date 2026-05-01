@@ -61,7 +61,7 @@ public class TestInit implements ClientModInitializer {
           size(px(p.getWidth()), px(p.getHeight())),
           anchor(0, 0, 0, 0, 0, 0),
           p.up(0),
-          fp(4),
+          fp(64),
           useConst(0xFFFFFFFF)
         )
       );

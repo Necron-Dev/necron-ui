@@ -6,7 +6,6 @@ import necron.ui.texture.Textures;
 import necron.ui.util.ColorUtil;
 import net.minecraft.client.DeltaTracker;
 import net.minecraft.client.gui.GuiGraphics;
-import net.minecraft.client.renderer.RenderPipelines;
 import org.joml.Vector2f;
 import org.joml.Vector2fc;
 
@@ -25,15 +24,13 @@ public class RoundedRect implements Renderable {
 
   @Override
   public void render(GuiGraphics gui, DeltaTracker delta) {
-    gui.pose().pushMatrix();
-    gui.pose().translate(nw.x(), nw.y());
-    gui.pose().scale(se.x() - nw.x(), se.y() - nw.y());
-    gui.blit(
-      RenderPipelines.GUI_TEXTURED,
-      Textures.ROUNDED_RECT,
-      0, 0, 0, 0, 1, 1, 1, 1
+    Renderer.render9(
+      gui, Textures.ROUNDED_RECT,
+      nw.x(), nw.y(),
+      se.x() - nw.x(), se.y() - nw.y(),
+      radius,
+      color
     );
-    gui.pose().popMatrix();
   }
 
   @Override
