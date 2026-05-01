@@ -11,7 +11,7 @@ import org.joml.Vector2fc;
 
 @With
 @Value
-public class DebugRect implements Renderable {
+public class DebugRectRenderable implements Renderable {
   Vector2fc nw, se;
   int color;
 

@@ -6,7 +6,7 @@ import necron.ui.animation.Ease;
 import necron.ui.context.Context;
 import necron.ui.element.Div;
 import necron.ui.element.Node;
-import necron.ui.element.RoundedRectNode;
+import necron.ui.element.RoundedRect;
 import necron.ui.event.*;
 import necron.ui.react.CalcReact;
 import necron.ui.react.UpdaterReact;
@@ -35,16 +35,18 @@ public class TestInit implements ClientModInitializer {
     windowWidth = useCalc(() -> (float) $($(Lazy.MC.getWindow().getGuiScaledWidth()), 0)),
     windowHeight = useCalc(() -> (float) $($(Lazy.MC.getWindow().getGuiScaledHeight()), 0));
 
-  private final Animation animation = new Animation(100F);
+  private final Animation animation = new Animation(200F);
+  private final Animation animation2 = new Animation(0F);
 
-  private float a = 100F, b = 200F;
+  private float a = 0F, b = 200F;
 
   private final UpdaterReact updater = useUpdater();
 
   private final CalcReact<Long> timer = _also(
     useListen(Timestamp.NANO_TIME, l -> l / 2_000_000_000L),
     x -> x.hooking((_, _) -> {
-      animation.next(Ease.ELASTIC.out(), b, 0, 1000);
+//      animation.next(Ease.ELASTIC.out(), b, 0, 1000);
+      animation2.next(Ease.EXPO.in(), b, 0, 1000);
       val tmp = a;
       a = b;
       b = tmp;
@@ -55,16 +57,7 @@ public class TestInit implements ClientModInitializer {
   private final Div div = new Div(
     null, _id, box(min(), min(), 100), auto(), fp(0), X, fp(0.5F),
     _ -> dsl -> {
-      dsl.add(
-        _id, (p, k) -> new RoundedRectNode(
-          p, k,
-          size(px(p.getWidth()), px(p.getHeight())),
-          anchor(0, 0, 0, 0, 0, 0),
-          p.up(0),
-          fp(64),
-          useConst(0xFFFFFFFF)
-        )
-      );
+      RoundedRect.background(dsl, animation2, useConst(0xFF111111));
       dsl.add(_id, (p, k) -> new Node(p, k, size(px(50), px(50)), auto(), p.up(1)));
       dsl.add(_id, (p, k) -> new Node(p, k, size(px(50), px(50)), anchor(0.5F, 0.5F, 0.5F, 0.5F, 0, 0), p.up(1)));
       dsl.add(_id, (p, k) -> new Node(p, k, size(px(animation), px(animation)), auto(), p.up(1)));

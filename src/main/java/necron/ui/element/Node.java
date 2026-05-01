@@ -13,7 +13,7 @@ import necron.ui.layout.Box;
 import necron.ui.layout.Pos;
 import necron.ui.react.React;
 import necron.ui.react.SubReact;
-import necron.ui.render.DebugRect;
+import necron.ui.render.DebugRectRenderable;
 import org.joml.Vector2f;
 
 import static necron.ui.layout.Dim.fp;
@@ -80,7 +80,7 @@ public class Node implements Element {
 
       case RenderEvent renderEvent -> {
         if (NecronUi.isDebugMode()) {
-          renderEvent.getYieldRenderable().accept(new DebugRect(
+          renderEvent.getYieldRenderable().accept(new DebugRectRenderable(
             new Vector2f(),
             new Vector2f(getWidth().peek(), getHeight().peek()),
             getDebugRectColor()

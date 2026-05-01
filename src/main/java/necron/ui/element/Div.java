@@ -14,7 +14,7 @@ import necron.ui.react.BoxReact;
 import necron.ui.react.React;
 import necron.ui.react.SubListReact;
 import necron.ui.react.SubReact;
-import necron.ui.render.DebugRect;
+import necron.ui.render.DebugRectRenderable;
 import org.joml.Vector2f;
 
 import java.util.List;
@@ -243,7 +243,7 @@ public class Div extends Node implements Container {
           val innerHeight = getInnerHeight().peek();
           val x = paddingLeft.peek();
           val y = paddingTop.peek();
-          renderEvent.getYieldRenderable().accept(new DebugRect(
+          renderEvent.getYieldRenderable().accept(new DebugRectRenderable(
             new Vector2f(x, y),
             new Vector2f(x + innerWidth, y + innerHeight),
             getInnerDebugRectColor()

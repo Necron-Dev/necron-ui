@@ -11,7 +11,7 @@ import org.joml.Vector2fc;
 
 @With
 @Value
-public class RoundedRect implements Renderable {
+public class RoundedRectRenderable implements Renderable {
   Vector2fc nw, se;
   float radius;
   int color;
