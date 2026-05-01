@@ -64,6 +64,7 @@ public class SubListReact<T> extends SerialReact<List<T>> implements SmartClosab
         hook.onRemove(index, removed);
       }
     }));
+    markDirty();
     return this;
   }
 

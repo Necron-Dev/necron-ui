@@ -5,9 +5,9 @@ import lombok.val;
 import necron.ui.NecronUi;
 import necron.ui.context.Context;
 import necron.ui.event.*;
+import necron.ui.layout.Axis;
 import necron.ui.layout.Box;
 import necron.ui.layout.Dim;
-import necron.ui.layout.Direction;
 import necron.ui.react.React;
 import necron.ui.react.SubListReact;
 import necron.ui.render.DebugRect;
@@ -28,7 +28,7 @@ import static necron.ui.util.fn.Fn3.fn;
 import static yqloss.E.$;
 
 public class Div extends Node implements Container {
-  private final Direction direction;
+  private final Axis axis;
 
   private final React<Float>
     paddingTop,
@@ -53,14 +53,14 @@ public class Div extends Node implements Container {
     Predicate<? super Element> elementIndependent
   ) {
     if (!major) return length;
-    val childrenLength = subList(
+    val childrenLength = useSubList(
       children,
       x -> elementIndependent.test(x)
            ? elementLength.apply(x)
            : fp(0)
     );
     return listDepend(
-      react(
+      useCalc(
         fn((Float lengthValue, List<React<Float>> listReact) -> {
           var space = lengthValue;
           for (val element : listReact) {
@@ -77,13 +77,13 @@ public class Div extends Node implements Container {
     Object key,
     Box.SizePadding sizePadding,
     React<Float> elevation,
-    Direction direction,
+    Axis axis,
     React<Float> alignment,
     ChildrenConfiguration children
   ) {
     if (sizePadding.getWidth() instanceof Dim.Min) sizePadding = sizePadding.padWidth();
     if (sizePadding.getHeight() instanceof Dim.Min) sizePadding = sizePadding.padHeight();
-    this.direction = direction;
+    this.axis = axis;
     paddingTop = sizePadding.getPaddingTop();
     paddingRight = sizePadding.getPaddingRight();
     paddingBottom = sizePadding.getPaddingBottom();
@@ -91,61 +91,39 @@ public class Div extends Node implements Container {
     this.alignment = alignment;
     val width = sizePadding.getWidth();
     val height = sizePadding.getHeight();
-    val list = this.children = subList();
-    val horizontal = subList(list, x -> x.isWidthIndependent() ? x.getWidth() : fp(0));
-    val vertical = subList(list, x -> x.isHeightIndependent() ? x.getHeight() : fp(0));
+    val list = this.children = useSubList();
+    val horizontal = useSubList(list, x -> x.isWidthIndependent() ? x.getWidth() : fp(0));
+    val vertical = useSubList(list, x -> x.isHeightIndependent() ? x.getHeight() : fp(0));
     super(
       parent,
       key,
-      width.create(horizontal, $(parent.getHorizontalSpace()), direction == Direction.HORIZONTAL),
-      height.create(vertical, $(parent.getVerticalSpace()), direction == Direction.VERTICAL),
+      width.create(horizontal, $(parent.getHorizontalSpace()), axis == Axis.X),
+      height.create(vertical, $(parent.getVerticalSpace()), axis == Axis.Y),
       elevation,
       width.isIndependent(),
       height.isIndependent()
     );
-    widthWithPadding = react(
+    widthWithPadding = useCalc(
       fn((Float w, Float l, Float r) -> w - l - r),
       getWidth(), paddingLeft, paddingRight
     );
-    heightWithPadding = react(
+    heightWithPadding = useCalc(
       fn((Float h, Float t, Float b) -> h - t - b),
       getHeight(), paddingTop, paddingBottom
     );
     horizontalSpace = createSpaceReact(
       getInnerWidth(),
-      direction == Direction.HORIZONTAL,
+      axis == Axis.X,
       Element::getWidth,
       Element::isWidthIndependent
     );
     verticalSpace = createSpaceReact(
       getInnerHeight(),
-      direction == Direction.VERTICAL,
+      axis == Axis.Y,
       Element::getHeight,
       Element::isHeightIndependent
     );
     this.children.setParent(ChildrenConfiguration.buildChildren(this, children), x -> x);
-  }
-
-  public static Div x(
-    Container parent,
-    Object key,
-    Box.SizePadding sizePadding,
-    React<Float> elevation,
-    React<Float> alignment,
-    ChildrenConfiguration children
-  ) {
-    return new Div(parent, key, sizePadding, elevation, Direction.HORIZONTAL, alignment, children);
-  }
-
-  public static Div y(
-    Container parent,
-    Object key,
-    Box.SizePadding sizePadding,
-    React<Float> elevation,
-    React<Float> alignment,
-    ChildrenConfiguration children
-  ) {
-    return new Div(parent, key, sizePadding, elevation, Direction.VERTICAL, alignment, children);
   }
 
   public React<Float> getInnerWidth() {
@@ -238,17 +216,17 @@ public class Div extends Node implements Container {
   }
 
   protected <T> T major(T x, T y) {
-    return direction == Direction.HORIZONTAL ? x : y;
+    return axis == Axis.X ? x : y;
   }
 
   protected <T> T cross(T x, T y) {
-    return direction == Direction.HORIZONTAL ? y : x;
+    return axis == Axis.X ? y : x;
   }
 
   public Node spacer(Object id, Dim length) {
     return new Node(
       this, id,
-      direction == Direction.HORIZONTAL
+      axis == Axis.X
       ? size(length, px(0))
       : size(px(0), length),
       getElevation()

@@ -13,7 +13,7 @@ import necron.ui.react.React;
 import necron.ui.render.DebugRect;
 import org.joml.Vector2f;
 
-import static necron.ui.react.React.subList;
+import static necron.ui.react.React.useConstList;
 import static yqloss.E.$;
 
 @Getter
@@ -29,9 +29,9 @@ public class Node implements Element {
     this.key = key;
     val width = size.getWidth();
     val height = size.getHeight();
-    this.width = width.create(subList(), $(parent.getHorizontalSpace()), false);
+    this.width = width.create(useConstList(), $(parent.getHorizontalSpace()), false);
     widthIndependent = width.isIndependent();
-    this.height = height.create(subList(), $(parent.getVerticalSpace()), false);
+    this.height = height.create(useConstList(), $(parent.getVerticalSpace()), false);
     heightIndependent = height.isIndependent();
     this.elevation = elevation;
   }

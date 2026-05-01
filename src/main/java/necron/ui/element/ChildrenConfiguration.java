@@ -32,7 +32,7 @@ public interface ChildrenConfiguration {
   ) {
     val context = new ChildrenContext();
     val builder = configuration.getChildrenBuilder(context);
-    val react = React.<Element>calcList(emit -> {
+    val react = React.<Element>useCalcList(emit -> {
       builder.buildChildren((key, factory) -> {
         emit.accept(new ConstructorWithKey<>() {
           @Override

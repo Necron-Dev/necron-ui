@@ -5,6 +5,7 @@ import necron.ui.util.MappedList;
 import necron.ui.util.fn.Fn;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
 import java.util.function.BiPredicate;
@@ -26,27 +27,23 @@ public interface React<T> extends Supplier<T> {
 
   long getSerial();
 
-  static UpdaterReact updater() {
+  static UpdaterReact useUpdater() {
     return new UpdaterReact();
   }
 
-  static <T> ConstReact<T> of(T value) {
+  static <T> ConstReact<T> useConst(T value) {
     return new ConstReact<>(value);
   }
 
-  static <T> ConstReact<T> constant(T value) {
-    return of(value);
-  }
-
-  static <T> BoxReact<T> box(BiPredicate<? super T, ? super T> equals, T value) {
+  static <T> BoxReact<T> useBox(BiPredicate<? super T, ? super T> equals, T value) {
     return new BoxReact<>(equals, value);
   }
 
-  static <T> BoxReact<T> box(T value) {
-    return box(Objects::equals, value);
+  static <T> BoxReact<T> useBox(T value) {
+    return useBox(Objects::equals, value);
   }
 
-  static <T> CalcReact<T> react(
+  static <T> CalcReact<T> useCalc(
     BiPredicate<? super T, ? super T> equals,
     Supplier<? extends T> value,
     React<?>... dependencies
@@ -59,7 +56,7 @@ public interface React<T> extends Supplier<T> {
     }.dependsOn(dependencies);
   }
 
-  static <A, T> CalcReact<T> react(
+  static <A, T> CalcReact<T> useCalc(
     BiPredicate<? super T, ? super T> equals,
     React<? extends A> dependency,
     Function<? super A, ? extends T> value
@@ -72,12 +69,12 @@ public interface React<T> extends Supplier<T> {
     }.dependsOn(dependency);
   }
 
-  static <T> CalcReact<T> react(
+  static <T> CalcReact<T> useCalc(
     BiPredicate<? super T, ? super T> equals,
     Fn<? extends T> value,
     React<?>... dependencies
   ) {
-    return react(
+    return useCalc(
       equals,
       () -> {
         val values = new Object[dependencies.length];
@@ -89,28 +86,28 @@ public interface React<T> extends Supplier<T> {
     );
   }
 
-  static <A, T> CalcReact<T> react(
+  static <A, T> CalcReact<T> useCalc(
     React<? extends A> dependency,
     Function<? super A, ? extends T> value
   ) {
-    return react(Objects::equals, dependency, value);
+    return useCalc(Objects::equals, dependency, value);
   }
 
-  static <T> CalcReact<T> react(
+  static <T> CalcReact<T> useCalc(
     Supplier<? extends T> value,
     React<?>... dependencies
   ) {
-    return react(Objects::equals, value, dependencies);
+    return useCalc(Objects::equals, value, dependencies);
   }
 
-  static <T> CalcReact<T> react(
+  static <T> CalcReact<T> useCalc(
     Fn<? extends T> value,
     React<?>... dependencies
   ) {
-    return react(Objects::equals, value, dependencies);
+    return useCalc(Objects::equals, value, dependencies);
   }
 
-  static <T> CalcReact<T> listen(
+  static <T> CalcReact<T> useListen(
     BiPredicate<? super T, ? super T> equals,
     Supplier<? extends T> value,
     React<?>... dependencies
@@ -123,7 +120,7 @@ public interface React<T> extends Supplier<T> {
     }.listensTo(dependencies);
   }
 
-  static <A, T> CalcReact<T> listen(
+  static <A, T> CalcReact<T> useListen(
     BiPredicate<? super T, ? super T> equals,
     React<? extends A> dependency,
     Function<? super A, ? extends T> value
@@ -136,12 +133,12 @@ public interface React<T> extends Supplier<T> {
     }.listensTo(dependency);
   }
 
-  static <T> CalcReact<T> listen(
+  static <T> CalcReact<T> useListen(
     BiPredicate<? super T, ? super T> equals,
     Fn<? extends T> value,
     React<?>... dependencies
   ) {
-    return listen(
+    return useListen(
       equals,
       () -> {
         val values = new Object[dependencies.length];
@@ -153,39 +150,71 @@ public interface React<T> extends Supplier<T> {
     );
   }
 
-  static <T> CalcReact<T> listen(
+  static <T> CalcReact<T> useListen(
     Supplier<? extends T> value,
     React<?>... dependencies
   ) {
-    return listen(Objects::equals, value, dependencies);
+    return useListen(Objects::equals, value, dependencies);
   }
 
-  static <A, T> CalcReact<T> listen(
+  static <A, T> CalcReact<T> useListen(
     React<? extends A> dependency,
     Function<? super A, ? extends T> value
   ) {
-    return listen(Objects::equals, dependency, value);
+    return useListen(Objects::equals, dependency, value);
   }
 
-  static <T> CalcReact<T> listen(
+  static <T> CalcReact<T> useListen(
     Fn<? extends T> value,
     React<?>... dependencies
   ) {
-    return listen(Objects::equals, value, dependencies);
+    return useListen(Objects::equals, value, dependencies);
   }
 
-  static <T> SubListReact<T> subList() {
+  static <T> SubReact<T> useSub(BiPredicate<? super T, ? super T> equals) {
+    return new SubReact<>(equals);
+  }
+
+  static <T> SubReact<T> useSub() {
+    return useSub(Objects::equals);
+  }
+
+  static <T, V> SubReact<T> useSub(
+    BiPredicate<? super T, ? super T> equals,
+    React<? extends V> parent,
+    Function<? super V, ? extends T> transformer
+  ) {
+    return React.<T>useSub(equals).setParent(parent, transformer);
+  }
+
+  static <T, V> SubReact<T> useSub(
+    React<? extends V> parent,
+    Function<? super V, ? extends T> transformer
+  ) {
+    return React.<T>useSub().setParent(parent, transformer);
+  }
+
+  static <T> ConstListReact<T> useConstList(List<? extends T> list) {
+    return new ConstListReact<>(list);
+  }
+
+  @SafeVarargs
+  static <T> ConstListReact<T> useConstList(T... list) {
+    return new ConstListReact<>(Arrays.asList(list));
+  }
+
+  static <T> SubListReact<T> useSubList() {
     return new SubListReact<>();
   }
 
-  static <V, T> SubListReact<T> subList(
+  static <V, T> SubListReact<T> useSubList(
     ListReact<? extends V> parent,
     Function<? super V, ? extends T> transformer
   ) {
-    return React.<T>subList().setParent(parent, transformer);
+    return React.<T>useSubList().setParent(parent, transformer);
   }
 
-  static <V, T> ListReact<T> mapList(
+  static <V, T> ListReact<T> useMapList(
     ListReact<? extends V> parent,
     Function<? super V, ? extends T> transformer
   ) {
@@ -231,7 +260,7 @@ public interface React<T> extends Supplier<T> {
     };
   }
 
-  static <T extends WithKey> CalcListReact<T> calcList(
+  static <T extends WithKey> CalcListReact<T> useCalcList(
     Consumer<? super Consumer<? super ConstructorWithKey<? extends T>>> calc
   ) {
     return new CalcListReact<>() {

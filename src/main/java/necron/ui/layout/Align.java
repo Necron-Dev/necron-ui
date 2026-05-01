@@ -22,11 +22,7 @@ public class Align {
     return END;
   }
 
-  public static React<Float> of(float value) {
-    return React.of(value);
-  }
-
-  public static React<Float> percent(float value) {
-    return of(value / 100F);
+  public static React<Float> align(float value) {
+    return fp(value);
   }
 }

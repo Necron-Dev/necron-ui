@@ -10,7 +10,6 @@ import necron.ui.event.ContentEvent;
 import necron.ui.event.MetricsEvent;
 import necron.ui.event.PositionEvent;
 import necron.ui.event.RenderEvent;
-import necron.ui.layout.Align;
 import necron.ui.react.CalcReact;
 import necron.ui.react.UpdaterReact;
 import necron.ui.render.Renderable;
@@ -24,6 +23,8 @@ import net.minecraft.network.chat.Component;
 import java.util.ArrayList;
 import java.util.Comparator;
 
+import static necron.ui.layout.Align.center;
+import static necron.ui.layout.Axis.X;
 import static necron.ui.layout.Box.box;
 import static necron.ui.layout.Box.size;
 import static necron.ui.layout.Dim.*;
@@ -32,17 +33,17 @@ import static yqloss.E.*;
 
 public class TestInit implements ClientModInitializer {
   private final CalcReact<Float>
-    windowWidth = react(() -> (float) $($(Lazy.MC.getWindow().getGuiScaledWidth()), 0)),
-    windowHeight = react(() -> (float) $($(Lazy.MC.getWindow().getGuiScaledHeight()), 0));
+    windowWidth = useCalc(() -> (float) $($(Lazy.MC.getWindow().getGuiScaledWidth()), 0)),
+    windowHeight = useCalc(() -> (float) $($(Lazy.MC.getWindow().getGuiScaledHeight()), 0));
 
   private final Animation animation = new Animation(100F);
 
   private float a = 100F, b = 200F;
 
-  private final UpdaterReact updater = updater();
+  private final UpdaterReact updater = useUpdater();
 
   private final CalcReact<Long> timer = _also(
-    listen(Timestamp.NANO_TIME, l -> l / 2_000_000_000L),
+    useListen(Timestamp.NANO_TIME, l -> l / 2_000_000_000L),
     x -> x.hooking((_, _) -> {
       animation.next(Ease.ELASTIC.out(), b, 0, 1000);
       val tmp = a;
@@ -52,8 +53,8 @@ public class TestInit implements ClientModInitializer {
     })
   );
 
-  private final Div div = Div.x(
-    null, _id, box(min(), min()), fp(0), Align.center(),
+  private final Div div = new Div(
+    null, _id, box(min(), min()), fp(0), X, center(),
     _ -> dsl -> {
       dsl.add(_id, (p, k) -> new Node(p, k, size(px(animation), px(animation)), p.up(0)));
       dsl.add(_id, (p, k) -> new Node(p, k, size(px(200), flex()), p.up(0)));

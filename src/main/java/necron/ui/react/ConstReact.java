@@ -1,8 +1,9 @@
 package necron.ui.react;
 
 public class ConstReact<T> implements React<T> {
+  private static final AutoCloseable DUMMY_HOOK = () -> {};
+
   private final T value;
-  private final AutoCloseable dummyHook = () -> {};
 
   public ConstReact(T value) {
     this.value = value;
@@ -15,7 +16,7 @@ public class ConstReact<T> implements React<T> {
 
   @Override
   public AutoCloseable hook(HookFn<? super T> hook) {
-    return dummyHook;
+    return DUMMY_HOOK;
   }
 
   @Override
