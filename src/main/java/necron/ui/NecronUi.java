@@ -3,6 +3,12 @@ package necron.ui;
 import com.google.gson.Gson;
 import lombok.Cleanup;
 import lombok.val;
+import necron.ui.callback.FrameCallback;
+import necron.ui.demo.DemoScreen;
+import necron.ui.style.Palette;
+import net.fabricmc.api.ClientModInitializer;
+import net.fabricmc.fabric.api.client.command.v2.ClientCommandManager;
+import net.fabricmc.fabric.api.client.command.v2.ClientCommandRegistrationCallback;
 import net.minecraft.resources.Identifier;
 import org.lwjgl.glfw.GLFW;
 
@@ -10,7 +16,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.Map;
 import java.util.Objects;
 
-public class NecronUi {
+public class NecronUi implements ClientModInitializer {
   public static final String ID, VERSION;
 
   public static Identifier identifier(String path) {
@@ -32,5 +38,32 @@ public class NecronUi {
 
   public static boolean isDebugMode() {
     return GLFW.glfwGetKey(Lazy.MC.getWindow().handle(), GLFW.GLFW_KEY_BACKSPACE) == GLFW.GLFW_PRESS;
+  }
+
+  @Override
+  public void onInitializeClient() {
+    ClientCommandRegistrationCallback.EVENT.register((dispatcher, _) -> {
+      val command = dispatcher.register(
+        ClientCommandManager
+          .literal("necron-ui")
+          .then(
+            ClientCommandManager
+              .literal("demo")
+              .then(
+                ClientCommandManager
+                  .literal("screen")
+                  .executes(_ -> DemoScreen.display())
+              )
+          )
+      );
+      dispatcher.register(ClientCommandManager.literal("nui").redirect(command));
+    });
+
+    FrameCallback.EVENT.register(() -> {
+      Timestamp.update();
+      Surface.update();
+      Input.update();
+      Palette.GLOBAL.update();
+    });
   }
 }

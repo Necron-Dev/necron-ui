@@ -9,7 +9,7 @@
   "entrypoints": {
     "client": [
       {
-        "value": "necron.ui.TestInit"
+        "value": "necron.ui.NecronUi"
       }
     ]
   },

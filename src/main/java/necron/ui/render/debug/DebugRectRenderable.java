@@ -6,7 +6,6 @@ import lombok.val;
 import necron.ui.Lazy;
 import necron.ui.render.Renderable;
 import necron.ui.util.Maths;
-import net.minecraft.client.DeltaTracker;
 import net.minecraft.client.gui.GuiGraphics;
 import org.joml.Vector2f;
 import org.joml.Vector2fc;
@@ -35,7 +34,7 @@ public class DebugRectRenderable implements Renderable {
   }
 
   @Override
-  public void render(GuiGraphics gui, DeltaTracker delta) {
+  public void render(GuiGraphics gui) {
     val guiScale = Lazy.MC.getWindow().getGuiScale();
     gui.pose().pushMatrix();
     gui.pose().scale(1F / guiScale);

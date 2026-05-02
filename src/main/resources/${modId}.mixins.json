@@ -1,6 +1,6 @@
 {
   "required": true,
-  "package": "necron.mixin",
+  "package": "necron.ui.mixin",
   "compatibilityLevel": "JAVA_21",
   "injectors": {
     "defaultRequire": 1
@@ -10,6 +10,7 @@
   },
   "client": [
     "MixinConnectScreen",
-    "MixinManageServerScreen"
+    "MixinManageServerScreen",
+    "MixinMinecraft"
   ]
 }

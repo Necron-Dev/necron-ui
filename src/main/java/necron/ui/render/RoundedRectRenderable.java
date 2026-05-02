@@ -5,7 +5,6 @@ import lombok.With;
 import necron.ui.texture.Textures;
 import necron.ui.util.ColorUtil;
 import necron.ui.util.Maths;
-import net.minecraft.client.DeltaTracker;
 import net.minecraft.client.gui.GuiGraphics;
 import org.joml.Vector2f;
 import org.joml.Vector2fc;
@@ -19,7 +18,7 @@ public class RoundedRectRenderable implements Renderable {
   float elevation;
 
   @Override
-  public void render(GuiGraphics gui, DeltaTracker delta) {
+  public void render(GuiGraphics gui) {
     Renderer.render9(
       gui, Textures.ROUNDED_RECT,
       nw.x(), nw.y(),

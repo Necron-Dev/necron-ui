@@ -5,6 +5,7 @@ import lombok.Getter;
 import lombok.Value;
 import lombok.val;
 import necron.ui.NecronUi;
+import necron.ui.Surface;
 import necron.ui.context.Context;
 import necron.ui.event.Event;
 import necron.ui.event.MetricsEvent;
@@ -18,7 +19,10 @@ import necron.ui.react.BoxReact;
 import necron.ui.react.React;
 import necron.ui.react.SubListReact;
 import necron.ui.react.SubReact;
+import necron.ui.render.SolidRectRenderable;
 import necron.ui.render.debug.DebugRectRenderable;
+import necron.ui.style.Palette;
+import necron.ui.util.Epsilon;
 import necron.ui.widget.ChildrenConfiguration;
 import necron.ui.widget.Container;
 import necron.ui.widget.Element;
@@ -290,6 +294,30 @@ public class Div extends Node implements Container {
       auto(),
       getElevation()
     );
+  }
+
+  public Node divider(Object id) {
+    return new Node(
+      this, id,
+      axis == Axis.X
+      ? size(dependent(getWidth()), px(Surface.PIXEL))
+      : size(px(Surface.PIXEL), dependent(getHeight())),
+      auto(),
+      up(Epsilon.FLOAT)
+    ) {
+      @Override
+      public boolean dispatch(Context context, Event event, boolean handled) {
+        if (event instanceof RenderEvent renderEvent) {
+          renderEvent.getYieldRenderable().accept(new SolidRectRenderable(
+            new Vector2f(),
+            new Vector2f(getWidth().peek(), getHeight().peek()),
+            Palette.GLOBAL.getDivider().peek(),
+            getElevation().peek()
+          ));
+        }
+        return super.dispatch(context, event, handled);
+      }
+    };
   }
 
   @Override

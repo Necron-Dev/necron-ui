@@ -1,4 +1,4 @@
-package necron.mixin;
+package necron.ui.mixin;
 
 import lombok.val;
 import necron.wcnmwynn.Encryption;
