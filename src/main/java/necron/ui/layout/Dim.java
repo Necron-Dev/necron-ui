@@ -5,6 +5,7 @@ import lombok.val;
 import necron.ui.react.ConstReact;
 import necron.ui.react.ListReact;
 import necron.ui.react.React;
+import necron.ui.util.fn.Fn2;
 
 import static necron.ui.layout.Dim.flex;
 import static necron.ui.layout.Dim.fp;
@@ -16,12 +17,8 @@ public interface Dim {
 
   boolean isIndependent();
 
-  default Dim plus(Dim other) {
-    return new Sum(this, other);
-  }
-
-  default Dim plus(React<Float> other) {
-    return new HookSum(this, other);
+  default Dim op(Fn2<? super Float, ? super Float, ? extends Float> operation, Dim other) {
+    return new Operation(this, other, operation);
   }
 
   @Value
@@ -138,13 +135,14 @@ public interface Dim {
   }
 
   @Value
-  class Sum implements Dim {
+  class Operation implements Dim {
     Dim a, b;
+    Fn2<? super Float, ? super Float, ? extends Float> operation;
 
     @Override
     public React<Float> create(ListReact<React<Float>> children, React<Float> space, boolean isMajorAxis) {
       return useCalc(
-        fn(Float::sum),
+        fn(operation),
         a.create(children, space, isMajorAxis),
         b.create(children, space, isMajorAxis)
       );
@@ -153,22 +151,6 @@ public interface Dim {
     @Override
     public boolean isIndependent() {
       return a.isIndependent() && b.isIndependent();
-    }
-  }
-
-  @Value
-  class HookSum implements Dim {
-    Dim a;
-    React<Float> b;
-
-    @Override
-    public React<Float> create(ListReact<React<Float>> children, React<Float> space, boolean isMajorAxis) {
-      return useCalc(fn(Float::sum), a.create(children, space, isMajorAxis), b);
-    }
-
-    @Override
-    public boolean isIndependent() {
-      return a.isIndependent();
     }
   }
 

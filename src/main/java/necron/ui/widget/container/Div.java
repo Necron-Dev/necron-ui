@@ -1,11 +1,15 @@
-package necron.ui.element;
+package necron.ui.widget.container;
 
+import lombok.Builder;
 import lombok.Getter;
 import lombok.Value;
 import lombok.val;
 import necron.ui.NecronUi;
 import necron.ui.context.Context;
-import necron.ui.event.*;
+import necron.ui.event.Event;
+import necron.ui.event.MetricsEvent;
+import necron.ui.event.PositionEvent;
+import necron.ui.event.RenderEvent;
 import necron.ui.layout.Axis;
 import necron.ui.layout.Box;
 import necron.ui.layout.Dim;
@@ -14,16 +18,20 @@ import necron.ui.react.BoxReact;
 import necron.ui.react.React;
 import necron.ui.react.SubListReact;
 import necron.ui.react.SubReact;
-import necron.ui.render.DebugRectRenderable;
+import necron.ui.render.debug.DebugRectRenderable;
+import necron.ui.widget.ChildrenConfiguration;
+import necron.ui.widget.Container;
+import necron.ui.widget.Element;
+import necron.ui.widget.element.Node;
 import org.joml.Vector2f;
 
 import java.util.List;
 import java.util.function.Function;
 import java.util.function.Predicate;
 
+import static necron.ui.layout.Box.box;
 import static necron.ui.layout.Box.size;
-import static necron.ui.layout.Dim.fp;
-import static necron.ui.layout.Dim.px;
+import static necron.ui.layout.Dim.*;
 import static necron.ui.layout.Pos.auto;
 import static necron.ui.react.React.*;
 import static necron.ui.util.fn.Fn2.fn;
@@ -132,6 +140,7 @@ public class Div extends Node implements Container {
     }
   }
 
+  @Builder(builderMethodName = "div")
   public Div(
     Container parent,
     Object key,
@@ -219,10 +228,6 @@ public class Div extends Node implements Container {
   @Override
   public boolean dispatch(Context context, Event event, boolean handled) {
     switch (event) {
-      case ContentEvent _ -> {
-        children.get();
-      }
-
       case MetricsEvent _ -> {
         updateMetrics(context, event, handled);
         Container.super.dispatch(context, event, handled);
@@ -231,13 +236,11 @@ public class Div extends Node implements Container {
       }
 
       case PositionEvent _ -> {
-        super.dispatch(context, event, handled);
         horizontalPositions.get();
         verticalPositions.get();
       }
 
       case RenderEvent renderEvent -> {
-        super.dispatch(context, event, handled);
         if (NecronUi.isDebugMode()) {
           val innerWidth = getInnerWidth().peek();
           val innerHeight = getInnerHeight().peek();
@@ -254,7 +257,7 @@ public class Div extends Node implements Container {
       default -> {}
     }
 
-    return Container.super.dispatch(context, event, handled);
+    return super.dispatch(context, event, handled) | Container.super.dispatch(context, event, handled);
   }
 
   private void updateMetrics(Context context, Event event, boolean handled) {
@@ -265,9 +268,9 @@ public class Div extends Node implements Container {
     paddingRight.get();
     paddingBottom.get();
     paddingLeft.get();
-    horizontalSpace.get();
-    verticalSpace.get();
-    alignment.get();
+    getHorizontalSpace().get();
+    getVerticalSpace().get();
+    getAlignment().get();
   }
 
   protected <T> T major(T x, T y) {
@@ -296,5 +299,17 @@ public class Div extends Node implements Container {
 
   protected int getInnerDebugRectColor() {
     return 0xFF00FFFF;
+  }
+
+  public static DivBuilder div(Container parent, Object key) {
+    return new DivBuilder()
+             .parent(parent)
+             .key(key)
+             .sizePadding(box(flex(), flex()))
+             .positioning(auto())
+             .elevation($($(parent.up(1)), fp(0)))
+             .axis(Axis.Y)
+             .alignment(fp(0))
+             .children(_ -> _ -> {});
   }
 }

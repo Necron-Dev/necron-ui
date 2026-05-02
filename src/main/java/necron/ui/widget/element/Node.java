@@ -1,5 +1,6 @@
-package necron.ui.element;
+package necron.ui.widget.element;
 
+import lombok.Builder;
 import lombok.Getter;
 import lombok.val;
 import necron.ui.NecronUi;
@@ -12,11 +13,16 @@ import necron.ui.layout.Box;
 import necron.ui.layout.Pos;
 import necron.ui.react.React;
 import necron.ui.react.SubReact;
-import necron.ui.render.DebugCrossRenderable;
-import necron.ui.render.DebugRectRenderable;
+import necron.ui.render.debug.DebugCrossRenderable;
+import necron.ui.render.debug.DebugRectRenderable;
+import necron.ui.widget.Container;
+import necron.ui.widget.Element;
 import org.joml.Vector2f;
 
+import static necron.ui.layout.Box.size;
+import static necron.ui.layout.Dim.flex;
 import static necron.ui.layout.Dim.fp;
+import static necron.ui.layout.Pos.auto;
 import static necron.ui.react.React.*;
 import static necron.ui.util.fn.Fn5.fn;
 import static yqloss.E.$;
@@ -35,6 +41,7 @@ public class Node implements Element {
     x = useSub(fp(0), x -> x),
     y = useSub(fp(0), x -> x);
 
+  @Builder(builderMethodName = "node")
   public Node(Container parent, Object key, Box.Size size, Pos positioning, React<Float> elevation) {
     this.parent = parent;
     this.key = key;
@@ -91,15 +98,15 @@ public class Node implements Element {
   public boolean dispatch(Context context, Event event, boolean handled) {
     switch (event) {
       case MetricsEvent _ -> {
-        width.get();
-        height.get();
-        elevation.get();
+        getWidth().get();
+        getHeight().get();
+        getElevation().get();
       }
 
       case PositionEvent _ -> {
-        positioning.update();
-        x.get();
-        y.get();
+        getPositioning().update();
+        getX().get();
+        getY().get();
       }
 
       case RenderEvent renderEvent -> {
@@ -145,5 +152,14 @@ public class Node implements Element {
 
   protected int getDebugOffsetCrossColor() {
     return 0xFF0000FF;
+  }
+
+  public static NodeBuilder node(Container parent, Object key) {
+    return new NodeBuilder()
+             .parent(parent)
+             .key(key)
+             .size(size(flex(), flex()))
+             .positioning(auto())
+             .elevation($($(parent.up(1)), fp(0)));
   }
 }

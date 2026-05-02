@@ -48,6 +48,6 @@ public class Timestamp {
         }
         return serial;
       }
-    }.dependsOn(intervalNs).listensTo(Timestamp.NANO_TIME);
+    }.dependsOn(intervalNs, Timestamp.NANO_TIME);
   }
 }

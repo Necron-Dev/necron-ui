@@ -1,4 +1,4 @@
-package necron.ui.element;
+package necron.ui.widget;
 
 import lombok.val;
 import necron.ui.react.ConstructorWithKey;

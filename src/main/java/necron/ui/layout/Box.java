@@ -5,6 +5,7 @@ import lombok.With;
 import necron.ui.react.React;
 
 import static necron.ui.layout.Dim.fp;
+import static necron.ui.layout.Dim.px;
 
 public class Box {
   @With
@@ -20,11 +21,11 @@ public class Box {
     React<Float> paddingTop, paddingRight, paddingBottom, paddingLeft;
 
     public SizePadding padWidth() {
-      return withWidth(width.plus(paddingLeft).plus(paddingRight));
+      return withWidth(width.op(Float::sum, px(paddingLeft)).op(Float::sum, px(paddingRight)));
     }
 
     public SizePadding padHeight() {
-      return withHeight(height.plus(paddingTop).plus(paddingBottom));
+      return withHeight(height.op(Float::sum, px(paddingTop)).op(Float::sum, px(paddingBottom)));
     }
 
     public SizePadding pad() {

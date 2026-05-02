@@ -1,4 +1,4 @@
-package necron.ui.element;
+package necron.ui.widget;
 
 import necron.ui.context.Context;
 import necron.ui.event.Event;

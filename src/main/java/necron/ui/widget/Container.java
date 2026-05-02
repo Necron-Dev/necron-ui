@@ -1,7 +1,8 @@
-package necron.ui.element;
+package necron.ui.widget;
 
 import lombok.val;
 import necron.ui.context.Context;
+import necron.ui.event.ContentEvent;
 import necron.ui.event.Event;
 import necron.ui.react.ListReact;
 import necron.ui.react.React;
@@ -18,6 +19,14 @@ public interface Container extends Element {
 
   @Override
   default boolean dispatch(Context context, Event event, boolean handled) {
+    switch (event) {
+      case ContentEvent _ -> {
+        getChildren().get();
+      }
+
+      default -> {}
+    }
+
     for (val child : getChildren().peek()) {
       val transformedEvent =
         event instanceof Transformable<?> transformable
