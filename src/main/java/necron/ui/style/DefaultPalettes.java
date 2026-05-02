@@ -16,8 +16,8 @@ public class DefaultPalettes {
     0xFFF4B740, // warning
     0xFFFF5D6C, // danger
     0xFF5CC8FF, // info
-    0xFF334057, // border
-    0xFF273149  // divider
+    0xFF1F2937, // border
+    0xFF1F2937  // divider
   );
 
   public static final Palette LIGHT = Palette.fromColors(
@@ -35,7 +35,7 @@ public class DefaultPalettes {
     0xFFD97706, // warning
     0xFFDC2626, // danger
     0xFF0EA5E9, // info
-    0xFFCBD5E1, // border
-    0xFFE2E8F0  // divider
+    0xFFE5E7EB, // border
+    0xFFE5E7EB  // divider
   );
 }

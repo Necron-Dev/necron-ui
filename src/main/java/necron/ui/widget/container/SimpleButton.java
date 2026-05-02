@@ -9,7 +9,8 @@ import necron.ui.event.KeyEvent;
 import necron.ui.event.MousePosEvent;
 import necron.ui.event.UpdateEvent;
 import necron.ui.layout.Axis;
-import necron.ui.layout.Box;
+import necron.ui.layout.Dim;
+import necron.ui.layout.Padding;
 import necron.ui.layout.Pos;
 import necron.ui.react.BoxReact;
 import necron.ui.react.CalcReact;
@@ -21,9 +22,9 @@ import necron.ui.widget.Container;
 import necron.ui.widget.element.RoundedRect;
 
 import static necron.ui.layout.Axis.Y;
-import static necron.ui.layout.Box.box;
 import static necron.ui.layout.Dim.fp;
 import static necron.ui.layout.Dim.min;
+import static necron.ui.layout.Padding.padding;
 import static necron.ui.layout.Pos.auto;
 import static necron.ui.react.React.*;
 import static necron.ui.util.fn.Fn2.fn;
@@ -37,19 +38,41 @@ public class SimpleButton extends Div {
   private final CalcReact<Boolean> isHovered, isPressed;
   private final React<Runnable> callback;
 
+  private static CalcReact<Integer> createGradient(
+    React<Integer> color,
+    React<Boolean> isHovered,
+    React<Boolean> isPressed
+  ) {
+    return useGradient(
+      useCalc(
+        fn((Integer c, Boolean h, Boolean p) -> {
+          return ColorUtil.scaleRGB(
+            c, p ? 0.9F : h ? 1.1F : 1F
+          );
+        }),
+        color, isHovered, isPressed
+      ),
+      (a, x) -> a.interrupt().next(Ease.LINEAR, x, 0, 200)
+    );
+  }
+
   @Builder(builderMethodName = "simpleButton")
   public SimpleButton(
     Container parent,
     Object key,
-    Box.SizePadding sizePadding,
-    Pos positioning,
+    Dim width,
+    Dim height,
+    Padding padding,
+    Pos xPos,
+    Pos yPos,
     React<Float> elevation,
     Axis axis,
     React<Float> alignment,
     React<Boolean> disabled,
     React<Float> deltaElevation,
     React<Float> cornerRadius,
-    React<Integer> color,
+    React<Integer> innerColor,
+    React<Integer> outerColor,
     React<Runnable> callback,
     ChildrenConfiguration children
   ) {
@@ -64,7 +87,7 @@ public class SimpleButton extends Div {
       disabled, thisIsPressedBox
     );
     super(
-      parent, key, sizePadding, positioning,
+      parent, key, width, height, padding, xPos, yPos,
       useAnimated(
         useCalc(
           fn((Float e, Boolean h, Boolean p, Float d) -> {
@@ -79,17 +102,9 @@ public class SimpleButton extends Div {
         val builder = children.getChildrenBuilder(ctx);
         return dsl -> {
           RoundedRect.background(
-            dsl, cornerRadius, useGradient(
-              useCalc(
-                fn((Integer c, Boolean h, Boolean p) -> {
-                  return ColorUtil.scaleRGB(
-                    c, p ? 0.9F : h ? 1.1F : 1F
-                  );
-                }),
-                color, thisIsHovered, thisIsPressed
-              ),
-              (a, x) -> a.interrupt().next(Ease.LINEAR, x, 0, 200)
-            )
+            dsl, cornerRadius,
+            createGradient(innerColor, thisIsHovered, thisIsPressed),
+            createGradient(outerColor, thisIsHovered, thisIsPressed)
           );
           builder.buildChildren(dsl);
         };
@@ -97,6 +112,28 @@ public class SimpleButton extends Div {
     );
     this.disabled = disabled;
     this.callback = callback;
+  }
+
+  public SimpleButton(SimpleButtonBuilder builder) {
+    this(
+      builder.parent,
+      builder.key,
+      builder.width,
+      builder.height,
+      builder.padding,
+      builder.xPos,
+      builder.yPos,
+      builder.elevation,
+      builder.axis,
+      builder.alignment,
+      builder.disabled,
+      builder.deltaElevation,
+      builder.cornerRadius,
+      builder.innerColor,
+      builder.outerColor,
+      builder.callback,
+      builder.children
+    );
   }
 
   @Override
@@ -135,15 +172,19 @@ public class SimpleButton extends Div {
     return new SimpleButtonBuilder()
              .parent(parent)
              .key(key)
-             .sizePadding(box(min(), min(), 8))
-             .positioning(auto())
+             .width(min())
+             .height(min())
+             .padding(padding(4))
+             .xPos(auto())
+             .yPos(auto())
              .elevation($($(parent.up(1)), fp(0)))
              .axis(Y)
              .alignment(fp(0.5f))
              .disabled(useConst(false))
              .deltaElevation(fp(0.1f))
-             .cornerRadius(fp(8))
-             .color(Palette.GLOBAL.getPrimary())
+             .cornerRadius(fp(4))
+             .innerColor(useConst(0))
+             .outerColor(Palette.GLOBAL.getPrimary())
              .callback(useConst(() -> {}))
              .children(_ -> _ -> {});
   }

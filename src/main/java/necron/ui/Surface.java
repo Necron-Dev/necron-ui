@@ -22,6 +22,10 @@ public class Surface {
     Lazy.MC.getWindow(), x -> 1F / x.getGuiScale()
   ));
 
+  public static final CalcReact<Float> LINE_WIDTH = useCalc(
+    PIXEL, x -> x * 2
+  );
+
   public static void update() {
     WIDTH.forceUpdate();
     HEIGHT.forceUpdate();

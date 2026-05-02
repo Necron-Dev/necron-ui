@@ -47,31 +47,6 @@ public class RoundedRectGenerator {
     return stream.toByteArray();
   }
 
-  @SneakyThrows
-  private static byte[] pregenerateHighlight(int size) {
-    val image = new BufferedImage(size, size, BufferedImage.TYPE_INT_ARGB);
-    @Cleanup("dispose") val g = image.createGraphics();
-    val unit = size >> 2;
-    InsideFunc func = (x, y, s) -> {
-      val xn = Math.pow((double) x / s, 2);
-      val yn = Math.pow((double) y / s, 2);
-      return xn + yn <= 1.0;
-    };
-    g.setComposite(AlphaComposite.Clear);
-    g.fillRect(0, 0, size, size);
-    g.setComposite(AlphaComposite.Src);
-    g.setPaint(new Color(0xFFFFFFFF));
-    g.fillRect(0, unit, size, size - unit - unit);
-    g.fillRect(unit, 0, size - unit - unit, size);
-    drawCorner(unit, func, (x, y, a) -> image.setRGB(unit - x - 1, unit - y - 1, (a + 1 << 24) - 1));
-    drawCorner(unit, func, (x, y, a) -> image.setRGB(size - unit + x, size - unit + y, (a + 1 << 24) - 1));
-    drawCorner(unit, func, (x, y, a) -> image.setRGB(unit - x - 1, size - unit + y, (a + 1 << 24) - 1));
-    drawCorner(unit, func, (x, y, a) -> image.setRGB(size - unit + x, unit - y - 1, (a + 1 << 24) - 1));
-    val stream = new ByteArrayOutputStream();
-    ImageIO.write(image, "png", stream);
-    return stream.toByteArray();
-  }
-
   private static void drawCorner(int size, InsideFunc func, PutPixel putPixel) {
     for (var x = 0; x < size; x++) {
       for (var y = 0; y < size; y++) {

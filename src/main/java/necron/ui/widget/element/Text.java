@@ -5,7 +5,6 @@ import lombok.val;
 import necron.ui.Lazy;
 import necron.ui.context.Context;
 import necron.ui.event.*;
-import necron.ui.layout.Box;
 import necron.ui.layout.Dim;
 import necron.ui.layout.Pos;
 import necron.ui.react.React;
@@ -21,7 +20,6 @@ import org.joml.Vector2f;
 
 import java.util.List;
 
-import static necron.ui.layout.Box.size;
 import static necron.ui.layout.Dim.*;
 import static necron.ui.layout.Pos.auto;
 import static necron.ui.react.React.*;
@@ -43,8 +41,10 @@ public class Text extends Node {
   public Text(
     Container parent,
     Object key,
-    Box.Size size,
-    Pos positioning,
+    Dim width,
+    Dim height,
+    Pos xPos,
+    Pos yPos,
     React<Float> elevation,
     React<FormattedText> content,
     React<Font> font,
@@ -55,10 +55,10 @@ public class Text extends Node {
     React<Boolean> wrap
   ) {
     SubReact<Float> heightReact = null;
-    val height = size.getHeight() instanceof Dim.Min
-                 ? px(heightReact = useSub(fp(0), x -> x))
-                 : size.getHeight();
-    super(parent, key, size.withHeight(height), positioning, elevation);
+    height = height instanceof Dim.Min
+             ? px(heightReact = useSub(fp(0), x -> x))
+             : height;
+    super(parent, key, width, height, xPos, yPos, elevation);
     this.content = content;
     this.font = font;
     this.fontSize = fontSize;
@@ -82,6 +82,25 @@ public class Text extends Node {
         ), x -> x
       );
     }
+  }
+
+  public Text(TextBuilder builder) {
+    this(
+      builder.parent,
+      builder.key,
+      builder.width,
+      builder.height,
+      builder.xPos,
+      builder.yPos,
+      builder.elevation,
+      builder.content,
+      builder.font,
+      builder.fontSize,
+      builder.spacing,
+      builder.align,
+      builder.color,
+      builder.wrap
+    );
   }
 
   @Override
@@ -136,12 +155,14 @@ public class Text extends Node {
     return new TextBuilder()
              .parent(parent)
              .key(key)
-             .size(size(flex(), min()))
-             .positioning(auto())
+             .width(flex())
+             .height(min())
+             .xPos(auto())
+             .yPos(auto())
              .elevation($($(parent.up(1)), fp(0)))
              .content(useConst(Component.empty()))
              .font(useConst(Lazy.MC.font))
-             .fontSize(fp(Lazy.MC.font.lineHeight))
+             .fontSize(fp(8))
              .spacing(fp(2))
              .align(fp(0))
              .color(Palette.GLOBAL.getForeground())

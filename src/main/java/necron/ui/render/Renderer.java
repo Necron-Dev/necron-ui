@@ -1,6 +1,7 @@
 package necron.ui.render;
 
 import lombok.val;
+import necron.ui.util.ColorUtil;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.renderer.RenderPipelines;
 import net.minecraft.resources.Identifier;
@@ -18,8 +19,11 @@ public class Renderer {
     float corner,
     int color
   ) {
+    if (width <= 0 || height <= 0) return;
+    if (ColorUtil.ai(color) == 0) return;
     corner = Math.min(corner, width / 2F);
     corner = Math.min(corner, height / 2F);
+    corner = Math.max(corner, 0);
     val x1 = x + corner;
     val x2 = x + width - corner;
     val mw = x2 - x1;

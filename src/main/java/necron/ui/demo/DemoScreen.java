@@ -14,9 +14,10 @@ import necron.ui.widget.container.SimpleButton;
 import necron.ui.widget.element.Text;
 import net.minecraft.network.chat.Component;
 
-import static necron.ui.layout.Box.box;
-import static necron.ui.layout.Dim.*;
-import static necron.ui.layout.Pos.anchor;
+import static necron.ui.layout.Dim.flex;
+import static necron.ui.layout.Dim.px;
+import static necron.ui.layout.Padding.padding;
+import static necron.ui.layout.Pos.anchorCC;
 import static necron.ui.react.React.useConst;
 import static yqloss.E._id;
 
@@ -27,15 +28,16 @@ public class DemoScreen {
     NecronUiScreen.display(new Fullscreen(_ -> d0 -> {
       d0.add(
         _id, Card::card,
-        it -> it.positioning(anchor(0.5F, 0.5F, 0.5F, 0.5F, 0, 0))
-                .sizePadding(box(px(240), px(180), 12))
+        it -> it.xPos(anchorCC())
+                .yPos(anchorCC())
+                .width(px(240))
+                .height(px(180))
+                .padding(padding(12))
                 .build(),
         _ -> d1 -> {
           d1.add(
             _id, SimpleButton::simpleButton,
-            it -> it
-                    .sizePadding(box(flex(), min(), 8))
-                    .build(),
+            it -> it.width(flex()).build(),
             _ -> d2 -> {
               d2.add(
                 _id, Text::text,

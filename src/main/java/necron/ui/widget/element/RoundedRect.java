@@ -5,38 +5,58 @@ import necron.ui.context.Context;
 import necron.ui.event.Event;
 import necron.ui.event.RenderEvent;
 import necron.ui.event.UpdateEvent;
-import necron.ui.layout.Box;
+import necron.ui.layout.Dim;
 import necron.ui.layout.Pos;
 import necron.ui.react.React;
+import necron.ui.render.BorderedRoundedRectRenderable;
 import necron.ui.render.RoundedRectRenderable;
 import necron.ui.widget.ChildrenConfiguration;
 import necron.ui.widget.Container;
 import org.joml.Vector2f;
 
-import static necron.ui.layout.Box.size;
 import static necron.ui.layout.Dim.*;
-import static necron.ui.layout.Pos.anchor;
+import static necron.ui.layout.Pos.anchorLL;
 import static necron.ui.layout.Pos.auto;
 import static necron.ui.react.React.useConst;
 import static yqloss.E.$;
 
 public class RoundedRect extends Node {
   private final React<Float> radius;
-  private final React<Integer> color;
+  private final React<Integer> innerColor;
+  private final React<Integer> outerColor;
 
   @Builder(builderMethodName = "roundedRect")
   public RoundedRect(
     Container parent,
     Object key,
-    Box.Size size,
-    Pos positioning,
+    Dim width,
+    Dim height,
+    Pos xPos,
+    Pos yPos,
     React<Float> elevation,
     React<Float> radius,
-    React<Integer> color
+    React<Integer> innerColor,
+    React<Integer> outerColor
   ) {
-    super(parent, key, size, positioning, elevation);
+    super(parent, key, width, height, xPos, yPos, elevation);
     this.radius = radius;
-    this.color = color;
+    this.innerColor = innerColor;
+    this.outerColor = outerColor;
+  }
+
+  public RoundedRect(RoundedRectBuilder builder) {
+    this(
+      builder.parent,
+      builder.key,
+      builder.width,
+      builder.height,
+      builder.xPos,
+      builder.yPos,
+      builder.elevation,
+      builder.radius,
+      builder.innerColor,
+      builder.outerColor
+    );
   }
 
   @Override
@@ -44,17 +64,23 @@ public class RoundedRect extends Node {
     switch (event) {
       case UpdateEvent _ -> {
         radius.get();
-        color.get();
+        innerColor.get();
+        outerColor.get();
       }
 
       case RenderEvent renderEvent -> {
-        renderEvent.getYieldRenderable().accept(new RoundedRectRenderable(
-          new Vector2f(0, 0),
-          new Vector2f(getWidth().peek(), getHeight().peek()),
-          radius.peek(),
-          color.peek(),
-          getElevation().peek()
-        ));
+        renderEvent.getYieldRenderable().accept(
+          BorderedRoundedRectRenderable.createFor(
+            new RoundedRectRenderable(
+              new Vector2f(0, 0),
+              new Vector2f(getWidth().peek(), getHeight().peek()),
+              radius.peek(),
+              innerColor.peek(),
+              getElevation().peek()
+            ),
+            outerColor.peek()
+          )
+        );
       }
 
       default -> {}
@@ -68,16 +94,18 @@ public class RoundedRect extends Node {
   public static void background(
     ChildrenConfiguration.ChildrenBuilderDsl dsl,
     React<Float> radius,
-    React<Integer> color
+    React<Integer> innerColor,
+    React<Integer> outerColor
   ) {
     dsl.add(
       BackgroundKey.class, (p, k) -> new RoundedRect(
         p, k,
-        size(px(p.getWidth()), px(p.getHeight())),
-        anchor(0, 0, 0, 0, 0, 0),
+        px(p.getWidth()), px(p.getHeight()),
+        anchorLL(), anchorLL(),
         p.up(0),
         radius,
-        color
+        innerColor,
+        outerColor
       )
     );
   }
@@ -86,10 +114,13 @@ public class RoundedRect extends Node {
     return new RoundedRectBuilder()
              .parent(parent)
              .key(key)
-             .size(size(flex(), flex()))
-             .positioning(auto())
+             .width(flex())
+             .height(flex())
+             .xPos(auto())
+             .yPos(auto())
              .elevation($($(parent.up(1)), fp(0)))
              .radius(fp(0))
-             .color(useConst(-1));
+             .innerColor(useConst(0))
+             .outerColor(useConst(-1));
   }
 }

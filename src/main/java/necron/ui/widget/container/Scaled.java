@@ -6,7 +6,6 @@ import lombok.val;
 import necron.ui.context.Context;
 import necron.ui.event.Event;
 import necron.ui.event.MetricsEvent;
-import necron.ui.layout.Box;
 import necron.ui.layout.Dim;
 import necron.ui.layout.Pos;
 import necron.ui.react.React;
@@ -18,7 +17,6 @@ import necron.ui.widget.Element;
 import necron.ui.widget.element.Node;
 import org.joml.Vector2f;
 
-import static necron.ui.layout.Box.size;
 import static necron.ui.layout.Dim.*;
 import static necron.ui.layout.Pos.auto;
 import static necron.ui.react.React.useSubList;
@@ -38,16 +36,16 @@ public class Scaled extends Node implements Container {
   public Scaled(
     Container parent,
     Object key,
-    Box.Size size,
-    Pos positioning,
+    Dim width,
+    Dim height,
+    Pos xPos,
+    Pos yPos,
     React<Float> elevation,
     React<Float> scale,
     ChildrenConfiguration children
   ) {
     val list = this.children = useSubList();
     this.scale = scale;
-    var width = size.getWidth();
-    var height = size.getHeight();
     if (width instanceof Dim.Min) width = width.op((x, y) -> x * y, px(scale));
     if (height instanceof Dim.Min) height = height.op((x, y) -> x * y, px(scale));
     val horizontal = useSubList(list, x -> x.isWidthIndependent() ? x.getWidth() : fp(0));
@@ -59,7 +57,8 @@ public class Scaled extends Node implements Container {
       height.create(vertical, $(parent.getVerticalSpace()), false),
       width.isIndependent(),
       height.isIndependent(),
-      positioning,
+      xPos,
+      yPos,
       elevation
     );
     horizontalSpace = React.useCalc(
@@ -71,6 +70,20 @@ public class Scaled extends Node implements Container {
       getHeight(), scale
     );
     list.setParent(ChildrenConfiguration.buildChildren(this, children), x -> x);
+  }
+
+  public Scaled(ScaledBuilder builder) {
+    this(
+      builder.parent,
+      builder.key,
+      builder.width,
+      builder.height,
+      builder.xPos,
+      builder.yPos,
+      builder.elevation,
+      builder.scale,
+      builder.children
+    );
   }
 
   @Override
@@ -108,8 +121,10 @@ public class Scaled extends Node implements Container {
     return new ScaledBuilder()
              .parent(parent)
              .key(key)
-             .size(size(min(), min()))
-             .positioning(auto())
+             .width(min())
+             .height(min())
+             .xPos(auto())
+             .yPos(auto())
              .elevation($($(parent.up(1)), fp(0)))
              .scale(fp(1))
              .children(_ -> _ -> {});

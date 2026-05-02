@@ -24,7 +24,7 @@ public class TextLineRenderable implements Renderable {
   public void render(GuiGraphics gui) {
     gui.pose().pushMatrix();
     gui.pose().translate(pos.x(), pos.y());
-    gui.pose().scale(height / font.lineHeight);
+    gui.pose().scale(height / 8F);
     gui.drawString(font, text, 0, 0, color, false);
     gui.pose().popMatrix();
   }

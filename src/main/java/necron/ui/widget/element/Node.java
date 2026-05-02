@@ -2,14 +2,13 @@ package necron.ui.widget.element;
 
 import lombok.Builder;
 import lombok.Getter;
-import lombok.val;
 import necron.ui.NecronUi;
 import necron.ui.context.Context;
 import necron.ui.event.Event;
 import necron.ui.event.MetricsEvent;
 import necron.ui.event.PositionEvent;
 import necron.ui.event.RenderEvent;
-import necron.ui.layout.Box;
+import necron.ui.layout.Dim;
 import necron.ui.layout.Pos;
 import necron.ui.react.React;
 import necron.ui.react.SubReact;
@@ -19,13 +18,13 @@ import necron.ui.widget.Container;
 import necron.ui.widget.Element;
 import org.joml.Vector2f;
 
-import static necron.ui.layout.Box.size;
 import static necron.ui.layout.Dim.flex;
 import static necron.ui.layout.Dim.fp;
 import static necron.ui.layout.Pos.auto;
 import static necron.ui.react.React.*;
 import static necron.ui.util.fn.Fn5.fn;
 import static yqloss.E.$;
+import static yqloss.E._all;
 
 @Getter
 public class Node implements Element {
@@ -33,7 +32,7 @@ public class Node implements Element {
   private final Object key;
   private final React<Float> width, height;
   private final boolean widthIndependent, heightIndependent;
-  private final Pos positioning;
+  private final Pos xPositioning, yPositioning;
   private final React<Float> elevation;
 
   @Getter
@@ -42,18 +41,37 @@ public class Node implements Element {
     y = useSub(fp(0), x -> x);
 
   @Builder(builderMethodName = "node")
-  public Node(Container parent, Object key, Box.Size size, Pos positioning, React<Float> elevation) {
+  public Node(
+    Container parent,
+    Object key,
+    Dim width,
+    Dim height,
+    Pos xPos,
+    Pos yPos,
+    React<Float> elevation
+  ) {
     this.parent = parent;
     this.key = key;
-    val width = size.getWidth();
-    val height = size.getHeight();
     this.width = width.create(useConstList(), $(parent.getHorizontalSpace()), false);
     widthIndependent = width.isIndependent();
     this.height = height.create(useConstList(), $(parent.getVerticalSpace()), false);
     heightIndependent = height.isIndependent();
-    this.positioning = positioning;
+    this.xPositioning = xPos;
+    this.yPositioning = yPos;
     this.elevation = elevation;
     setupAnchorHook();
+  }
+
+  public Node(NodeBuilder builder) {
+    this(
+      builder.parent,
+      builder.key,
+      builder.width,
+      builder.height,
+      builder.xPos,
+      builder.yPos,
+      builder.elevation
+    );
   }
 
   public Node(
@@ -63,7 +81,8 @@ public class Node implements Element {
     React<Float> height,
     boolean widthIndependent,
     boolean heightIndependent,
-    Pos positioning,
+    Pos xPositioning,
+    Pos yPositioning,
     React<Float> elevation
   ) {
     this.parent = parent;
@@ -72,23 +91,27 @@ public class Node implements Element {
     this.height = height;
     this.widthIndependent = widthIndependent;
     this.heightIndependent = heightIndependent;
-    this.positioning = positioning;
+    this.xPositioning = xPositioning;
+    this.yPositioning = yPositioning;
     this.elevation = elevation;
     setupAnchorHook();
   }
 
   private void setupAnchorHook() {
-    if (parent != null && positioning instanceof Pos.Anchor anchor) {
+    if (parent == null) return;
+    if (xPositioning instanceof Pos.Anchor anchor) {
       x.setParent(
         useCalc(
           fn((Float p, Float s, Float r, Float a, Float o) -> r * p - a * s + o),
-          parent.getWidth(), getWidth(), anchor.getRelativeX(), anchor.getAnchorX(), anchor.getOffsetX()
+          parent.getWidth(), getWidth(), anchor.getRelative(), anchor.getAnchor(), anchor.getOffset()
         ), x -> x
       );
+    }
+    if (yPositioning instanceof Pos.Anchor anchor) {
       y.setParent(
         useCalc(
           fn((Float p, Float s, Float r, Float a, Float o) -> r * p - a * s + o),
-          parent.getHeight(), getHeight(), anchor.getRelativeY(), anchor.getAnchorY(), anchor.getOffsetY()
+          parent.getHeight(), getHeight(), anchor.getRelative(), anchor.getAnchor(), anchor.getOffset()
         ), x -> x
       );
     }
@@ -104,7 +127,8 @@ public class Node implements Element {
       }
 
       case PositionEvent _ -> {
-        getPositioning().update();
+        getXPositioning().update();
+        getYPositioning().update();
         getX().get();
         getY().get();
       }
@@ -117,18 +141,22 @@ public class Node implements Element {
             getDebugRectColor()
           ));
 
-          if (positioning instanceof Pos.Anchor anchor) {
+          if (
+            _all
+            && xPositioning instanceof Pos.Anchor anchorX
+            && yPositioning instanceof Pos.Anchor anchorY
+          ) {
             renderEvent.getYieldRenderable().accept(new DebugCrossRenderable(
               new Vector2f(
-                getWidth().peek() * anchor.getAnchorX().peek() - anchor.getOffsetX().peek(),
-                getHeight().peek() * anchor.getAnchorY().peek() - anchor.getOffsetY().peek()
+                getWidth().peek() * anchorX.getAnchor().peek() - anchorX.getOffset().peek(),
+                getHeight().peek() * anchorY.getAnchor().peek() - anchorY.getOffset().peek()
               ),
               getDebugAnchorCrossColor()
             ));
             renderEvent.getYieldRenderable().accept(new DebugCrossRenderable(
               new Vector2f(
-                getWidth().peek() * anchor.getAnchorX().peek(),
-                getHeight().peek() * anchor.getAnchorY().peek()
+                getWidth().peek() * anchorX.getAnchor().peek(),
+                getHeight().peek() * anchorY.getAnchor().peek()
               ),
               getDebugOffsetCrossColor()
             ));
@@ -158,8 +186,10 @@ public class Node implements Element {
     return new NodeBuilder()
              .parent(parent)
              .key(key)
-             .size(size(flex(), flex()))
-             .positioning(auto())
+             .width(flex())
+             .height(flex())
+             .xPos(auto())
+             .yPos(auto())
              .elevation($($(parent.up(1)), fp(0)));
   }
 }

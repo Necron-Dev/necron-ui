@@ -30,7 +30,9 @@ public interface Element extends SmartClosable, WithKey {
 
   React<Float> getElevation();
 
-  Pos getPositioning();
+  Pos getXPositioning();
+
+  Pos getYPositioning();
 
   SubReact<Float> getX();
 
