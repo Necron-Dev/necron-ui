@@ -249,20 +249,6 @@ public class Div extends Node implements Container {
             getInnerDebugRectColor()
           ));
         }
-        for (val child : getChildren().peek()) {
-          val x = child.getX().peek();
-          val y = child.getY().peek();
-          child.dispatch(
-            context,
-            new RenderEvent(
-              renderable -> renderEvent.getYieldRenderable().accept(
-                renderable.translate(new Vector2f(x, y))
-              )
-            ),
-            false
-          );
-        }
-        return false;
       }
 
       default -> {}

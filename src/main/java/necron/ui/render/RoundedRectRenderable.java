@@ -4,6 +4,7 @@ import lombok.Value;
 import lombok.With;
 import necron.ui.texture.Textures;
 import necron.ui.util.ColorUtil;
+import necron.ui.util.Maths;
 import net.minecraft.client.DeltaTracker;
 import net.minecraft.client.gui.GuiGraphics;
 import org.joml.Vector2f;
@@ -42,8 +43,8 @@ public class RoundedRectRenderable implements Renderable {
   public Renderable scale(Vector2fc origin, float factor) {
     return this
              .withRadius(radius * factor)
-             .withNw(new Vector2f(nw).sub(origin).mul(factor).add(origin))
-             .withSe(new Vector2f(se).sub(origin).mul(factor).add(origin));
+             .withNw(Maths.scale(nw, origin, factor))
+             .withSe(Maths.scale(se, origin, factor));
   }
 
   @Override

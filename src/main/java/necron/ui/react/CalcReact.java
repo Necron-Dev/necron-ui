@@ -69,6 +69,9 @@ public abstract class CalcReact<T> extends SerialReact<T> implements SmartClosab
   }
 
   public void forceUpdate() {
+    for (val dependency : dependencies) {
+      dependency.react.get();
+    }
     val oldValue = value;
     val newValue = calculate();
     if (equals != null && equals.test(oldValue, newValue)) {

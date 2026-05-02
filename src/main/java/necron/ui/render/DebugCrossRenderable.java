@@ -12,20 +12,18 @@ import org.joml.Vector2fc;
 
 @With
 @Value
-public class DebugRectRenderable implements Renderable {
-  Vector2fc nw, se;
+public class DebugCrossRenderable implements Renderable {
+  Vector2fc pos;
   int color;
 
   @Override
   public Renderable scale(Vector2fc origin, float factor) {
-    return this
-             .withNw(Maths.scale(nw, origin, factor))
-             .withSe(Maths.scale(se, origin, factor));
+    return this.withPos(Maths.scale(pos, origin, factor));
   }
 
   @Override
   public Renderable translate(Vector2fc vec) {
-    return withNw(new Vector2f(nw).add(vec)).withSe(new Vector2f(se).add(vec));
+    return this.withPos(new Vector2f(pos).add(vec));
   }
 
   @Override
@@ -38,11 +36,17 @@ public class DebugRectRenderable implements Renderable {
     val guiScale = Lazy.MC.getWindow().getGuiScale();
     gui.pose().pushMatrix();
     gui.pose().scale(1F / guiScale);
-    gui.renderOutline(
-      (int) (guiScale * nw.x()),
-      (int) (guiScale * nw.y()),
-      (int) (guiScale * (se.x() - nw.x())),
-      (int) (guiScale * (se.y() - nw.y())),
+    val length = 10;
+    gui.hLine(
+      (int) (guiScale * (pos.x() - length)),
+      (int) (guiScale * (pos.x() + length)),
+      (int) (guiScale * pos.y()),
+      color
+    );
+    gui.vLine(
+      (int) (guiScale * pos.x()),
+      (int) (guiScale * (pos.y() - length)),
+      (int) (guiScale * (pos.y() + length)),
       color
     );
     gui.pose().popMatrix();

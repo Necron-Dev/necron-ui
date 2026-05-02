@@ -1,17 +1,13 @@
 package necron.ui.render;
 
+import necron.ui.util.Transformable;
 import net.minecraft.client.DeltaTracker;
 import net.minecraft.client.gui.GuiGraphics;
-import org.joml.Vector2fc;
 
-public interface Renderable {
+public interface Renderable extends Transformable<Renderable> {
   float getElevation();
 
   void render(GuiGraphics gui, DeltaTracker delta);
-
-  Renderable translate(Vector2fc vec);
-
-  Renderable scale(Vector2fc origin, float factor);
 
   default Float getElevationScaleFactor() {
     return 0.005F * getElevation();

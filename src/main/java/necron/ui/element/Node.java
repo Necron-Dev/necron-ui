@@ -1,6 +1,5 @@
 package necron.ui.element;
 
-import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.val;
 import necron.ui.NecronUi;
@@ -13,6 +12,7 @@ import necron.ui.layout.Box;
 import necron.ui.layout.Pos;
 import necron.ui.react.React;
 import necron.ui.react.SubReact;
+import necron.ui.render.DebugCrossRenderable;
 import necron.ui.render.DebugRectRenderable;
 import org.joml.Vector2f;
 
@@ -22,7 +22,6 @@ import static necron.ui.util.fn.Fn5.fn;
 import static yqloss.E.$;
 
 @Getter
-@AllArgsConstructor
 public class Node implements Element {
   private final Container parent;
   private final Object key;
@@ -47,6 +46,31 @@ public class Node implements Element {
     heightIndependent = height.isIndependent();
     this.positioning = positioning;
     this.elevation = elevation;
+    setupAnchorHook();
+  }
+
+  public Node(
+    Container parent,
+    Object key,
+    React<Float> width,
+    React<Float> height,
+    boolean widthIndependent,
+    boolean heightIndependent,
+    Pos positioning,
+    React<Float> elevation
+  ) {
+    this.parent = parent;
+    this.key = key;
+    this.width = width;
+    this.height = height;
+    this.widthIndependent = widthIndependent;
+    this.heightIndependent = heightIndependent;
+    this.positioning = positioning;
+    this.elevation = elevation;
+    setupAnchorHook();
+  }
+
+  private void setupAnchorHook() {
     if (parent != null && positioning instanceof Pos.Anchor anchor) {
       x.setParent(
         useCalc(
@@ -85,6 +109,23 @@ public class Node implements Element {
             new Vector2f(getWidth().peek(), getHeight().peek()),
             getDebugRectColor()
           ));
+
+          if (positioning instanceof Pos.Anchor anchor) {
+            renderEvent.getYieldRenderable().accept(new DebugCrossRenderable(
+              new Vector2f(
+                getWidth().peek() * anchor.getAnchorX().peek() - anchor.getOffsetX().peek(),
+                getHeight().peek() * anchor.getAnchorY().peek() - anchor.getOffsetY().peek()
+              ),
+              getDebugAnchorCrossColor()
+            ));
+            renderEvent.getYieldRenderable().accept(new DebugCrossRenderable(
+              new Vector2f(
+                getWidth().peek() * anchor.getAnchorX().peek(),
+                getHeight().peek() * anchor.getAnchorY().peek()
+              ),
+              getDebugOffsetCrossColor()
+            ));
+          }
         }
       }
 
@@ -96,5 +137,13 @@ public class Node implements Element {
 
   protected int getDebugRectColor() {
     return 0xFFFF0000;
+  }
+
+  protected int getDebugAnchorCrossColor() {
+    return 0xFF00FF00;
+  }
+
+  protected int getDebugOffsetCrossColor() {
+    return 0xFF0000FF;
   }
 }

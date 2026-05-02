@@ -2,11 +2,15 @@ package necron.ui.element;
 
 import necron.ui.context.Context;
 import necron.ui.event.Event;
+import necron.ui.event.WithPosition;
 import necron.ui.layout.Pos;
 import necron.ui.react.React;
 import necron.ui.react.SubReact;
 import necron.ui.react.WithKey;
+import necron.ui.util.Maths;
 import necron.ui.util.SmartClosable;
+import org.joml.Vector2f;
+import org.joml.Vector2fc;
 
 import java.util.Queue;
 
@@ -48,5 +52,13 @@ public interface Element extends SmartClosable, WithKey {
 
   default React<Float> up(React<Float> elevation) {
     return useCalc(fn(Float::sum), getElevation(), elevation);
+  }
+
+  default boolean isInside(Vector2fc pos) {
+    return Maths.isInside(pos, new Vector2f(), new Vector2f(getWidth().peek(), getHeight().peek()));
+  }
+
+  default boolean isInside(WithPosition object) {
+    return isInside(object.getPosition());
   }
 }

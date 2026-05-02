@@ -4,12 +4,10 @@ import lombok.val;
 import necron.ui.animation.Animation;
 import necron.ui.animation.Ease;
 import necron.ui.context.Context;
-import necron.ui.element.Div;
-import necron.ui.element.Node;
-import necron.ui.element.RoundedRect;
+import necron.ui.element.*;
 import necron.ui.event.*;
 import necron.ui.react.CalcReact;
-import necron.ui.react.UpdaterReact;
+import necron.ui.react.React;
 import necron.ui.render.Renderable;
 import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.fabric.api.client.rendering.v1.hud.HudElementRegistry;
@@ -17,53 +15,90 @@ import net.fabricmc.fabric.api.client.rendering.v1.hud.VanillaHudElements;
 import net.minecraft.client.DeltaTracker;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.network.chat.Component;
+import org.joml.Vector2f;
+import org.joml.Vector2fc;
+import org.lwjgl.glfw.GLFW;
 
 import java.util.ArrayList;
 import java.util.Comparator;
 
 import static necron.ui.layout.Axis.X;
+import static necron.ui.layout.Axis.Y;
 import static necron.ui.layout.Box.box;
 import static necron.ui.layout.Box.size;
 import static necron.ui.layout.Dim.*;
 import static necron.ui.layout.Pos.anchor;
 import static necron.ui.layout.Pos.auto;
 import static necron.ui.react.React.*;
-import static yqloss.E.*;
+import static yqloss.E.$;
+import static yqloss.E._id;
 
 public class TestInit implements ClientModInitializer {
   private final CalcReact<Float>
     windowWidth = useCalc(() -> (float) $($(Lazy.MC.getWindow().getGuiScaledWidth()), 0)),
     windowHeight = useCalc(() -> (float) $($(Lazy.MC.getWindow().getGuiScaledHeight()), 0));
 
+  private final CalcReact<Vector2fc> mousePos = useCalc(() -> {
+    val m = Lazy.MC.mouseHandler;
+    val w = Lazy.MC.getWindow();
+    if (w == null) return new Vector2f();
+    return new Vector2f(
+      (float) (double) $($(m.getScaledXPos(w)), 0.0),
+      (float) (double) $($(m.getScaledYPos(w)), 0.0)
+    );
+  });
+
   private final Animation animation = new Animation(200F);
-  private final Animation animation2 = new Animation(0F);
+  private float a = 100F, b = 200F;
 
-  private float a = 0F, b = 200F;
+  private final React<Long> timer =
+    Timestamp.timer(fp(2000))
+      .hooking((_, _) -> {
+        animation.next(Ease.ELASTIC.out(), b, 0, 1000);
+        val tmp = a;
+        a = b;
+        b = tmp;
+      });
 
-  private final UpdaterReact updater = useUpdater();
-
-  private final CalcReact<Long> timer = _also(
-    useListen(Timestamp.NANO_TIME, l -> l / 2_000_000_000L),
-    x -> x.hooking((_, _) -> {
-//      animation.next(Ease.ELASTIC.out(), b, 0, 1000);
-      animation2.next(Ease.EXPO.in(), b, 0, 1000);
-      val tmp = a;
-      a = b;
-      b = tmp;
-      updater.update();
-    })
+  private final Div root = new Div(
+    null, _id, box(px(windowWidth), px(windowHeight)), auto(), fp(0), Y, fp(0),
+    _ -> dsl -> dsl.add(_id, this::createContent)
   );
 
-  private final Div div = new Div(
-    null, _id, box(min(), min(), 100), auto(), fp(0), X, fp(0.5F),
-    _ -> dsl -> {
-      RoundedRect.background(dsl, fp(64), useConst(0xFF111111));
-      dsl.add(_id, (p, k) -> new Node(p, k, size(px(50), px(50)), auto(), p.up(1)));
-      dsl.add(_id, (p, k) -> new Node(p, k, size(px(50), px(50)), anchor(0.5F, 0.5F, 0.5F, 0.5F, 0, 0), p.up(1)));
-      dsl.add(_id, (p, k) -> new Node(p, k, size(px(animation), px(animation)), auto(), p.up(1)));
-      dsl.add(_id, (p, k) -> new Node(p, k, size(px(200), flex()), auto(), p.up(1)));
-    }
-  );
+  private Element createContent(Container p0, Object k0) {
+    val isMouseInside = useBox(false);
+    val color = useGradient(
+      useCalc(isMouseInside, x -> x ? 0xFF003F00 : 0xFF3F0000),
+      (a, x) -> a.interrupt().next(Ease.LINEAR, x, 0, 500)
+    );
+
+    return new Div(
+      p0, k0, box(min(), min(), 100), anchor(0.5F, 0.5F, 0.5F, 0.5F, 0, 0), p0.up(1), X, fp(0.5F),
+      _ -> dsl -> {
+        RoundedRect.background(dsl, fp(64), color);
+        dsl.add(_id, (p1, k1) -> new Node(p1, k1, size(px(50), px(50)), auto(), p1.up(1)));
+        dsl.add(_id, (p1, k1) -> new Node(p1, k1, size(px(50), px(50)), anchor(0.5F, 0.5F, 0.5F, 0.5F, 0, 0), p1.up(1)));
+        dsl.add(
+          _id, (p1, k1) -> new Node(p1, k1, size(px(animation), px(animation)), auto(), p1.up(1)) {
+            @Override
+            public boolean dispatch(Context context, Event event, boolean handled) {
+              switch (event) {
+                case MouseMoveEvent e -> {
+                  val inside = isInside(e);
+                  isMouseInside.set(inside);
+                  return inside;
+                }
+
+                default -> {}
+              }
+              return super.dispatch(context, event, handled);
+            }
+          }
+        );
+        dsl.add(_id, (p1, k1) -> new Node(p1, k1, size(px(200), flex()), auto(), p1.up(1)));
+      }
+    );
+  }
 
   @Override
   public void onInitializeClient() {
@@ -75,19 +110,25 @@ public class TestInit implements ClientModInitializer {
   }
 
   private void render(GuiGraphics context, DeltaTracker deltaTracker) {
+    if (GLFW.glfwGetKey(Lazy.MC.getWindow().handle(), GLFW.GLFW_KEY_DELETE) == GLFW.GLFW_PRESS) {
+      return;
+    }
     val time = System.nanoTime();
     Timestamp.update();
+    timer.get();
     windowWidth.forceUpdate();
     windowHeight.forceUpdate();
+    mousePos.forceUpdate();
     val ctx = new Context();
-    div.dispatch(ctx, ContentEvent.INSTANCE, false);
-    div.dispatch(ctx, MetricsEvent.INSTANCE, false);
-    div.dispatch(ctx, MetricsEvent.INSTANCE, false);
-    div.dispatch(ctx, MetricsEvent.INSTANCE, false);
-    div.dispatch(ctx, PositionEvent.INSTANCE, false);
-    div.dispatch(ctx, UpdateEvent.INSTANCE, false);
+    root.dispatch(ctx, ContentEvent.INSTANCE, false);
+    root.dispatch(ctx, MetricsEvent.INSTANCE, false);
+    root.dispatch(ctx, MetricsEvent.INSTANCE, false);
+    root.dispatch(ctx, MetricsEvent.INSTANCE, false);
+    root.dispatch(ctx, PositionEvent.INSTANCE, false);
+    root.dispatch(ctx, UpdateEvent.INSTANCE, false);
+    root.dispatch(ctx, new MouseMoveEvent(mousePos.peek()), false);
     val renderables = new ArrayList<Renderable>();
-    div.dispatch(ctx, new RenderEvent(renderables::add), false);
+    root.dispatch(ctx, new RenderEvent(renderables::add), false);
     renderables.sort(Comparator.comparing(Renderable::getElevation));
     for (val renderable : renderables) {
       renderable.render(context, deltaTracker);

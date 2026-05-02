@@ -1,8 +1,11 @@
 package necron.ui.react;
 
 import lombok.val;
+import necron.ui.animation.Animation;
+import necron.ui.util.ColorUtil;
 import necron.ui.util.MappedList;
 import necron.ui.util.fn.Fn;
+import necron.ui.util.fn.Fn2v;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -12,6 +15,9 @@ import java.util.function.BiPredicate;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
+
+import static necron.ui.react.React.*;
+import static necron.ui.util.fn.Fn4.fn;
 
 public interface React<T> extends Supplier<T> {
   AutoCloseable hook(HookFn<? super T> hook);
@@ -295,5 +301,70 @@ public interface React<T> extends Supplier<T> {
     list.peek().forEach(calcReact::dependsOn);
     list.hookingInsert((_, react) -> calcReact.listensTo(react));
     return calcReact;
+  }
+
+  static <T> CalcReact<T> useCalcStable(
+    BiPredicate<? super T, ? super T> equals,
+    React<? extends T> calcReact
+  ) {
+    return useCalc(equals, calcReact, x -> x);
+  }
+
+  static <T> CalcReact<T> useCalcStable(React<? extends T> calcReact) {
+    return useCalcStable(Objects::equals, calcReact);
+  }
+
+  static <T> CalcReact<T> useListenStable(
+    BiPredicate<? super T, ? super T> equals,
+    React<? extends T> calcReact
+  ) {
+    return useListen(equals, calcReact, x -> x);
+  }
+
+  static <T> CalcReact<T> useListenStable(React<? extends T> calcReact) {
+    return useListenStable(Objects::equals, calcReact);
+  }
+
+  static Animation useAnimated(
+    React<Float> react,
+    Fn2v<Animation, Float> animate
+  ) {
+    val animation = new Animation(react.peek());
+    animation.dependsOn(
+      useCalc(
+        useCalcStable(react),
+        x -> {
+          animate.invokev(animation, x);
+          return x;
+        }
+      )
+    );
+    return animation;
+  }
+
+  static CalcReact<Integer> useGradient(
+    React<Integer> react,
+    Fn2v<Animation, Float> animate
+  ) {
+    val color = react.peek();
+    val a = new Animation(ColorUtil.af(color));
+    val r = new Animation(ColorUtil.rf(color));
+    val g = new Animation(ColorUtil.gf(color));
+    val b = new Animation(ColorUtil.bf(color));
+    return useCalc(
+      fn((Float av, Float rv, Float gv, Float bv) -> ColorUtil.compose(av, rv, gv, bv)),
+      a, r, g, b
+    ).dependsOn(
+      useCalc(
+        useCalcStable(react),
+        x -> {
+          animate.invokev(a, ColorUtil.af(x));
+          animate.invokev(r, ColorUtil.rf(x));
+          animate.invokev(g, ColorUtil.gf(x));
+          animate.invokev(b, ColorUtil.bf(x));
+          return x;
+        }
+      )
+    );
   }
 }

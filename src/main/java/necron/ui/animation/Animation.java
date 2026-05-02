@@ -53,7 +53,7 @@ public class Animation extends CalcReact<Float> {
   }
 
   public Animation interrupt() {
-    return set(get());
+    return set(peek());
   }
 
   @Override
