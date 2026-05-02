@@ -19,4 +19,23 @@ public class DefaultPalettes {
     0xFF334057, // border
     0xFF273149  // divider
   );
+
+  public static final Palette LIGHT = Palette.fromColors(
+    0xFFF8FAFC, // background
+    0xFF0B1020, // foreground
+    0xFFFFFFFF, // surface
+    0xFF101828, // surfaceForeground
+    0xFF2563EB, // primary
+    0xFFFFFFFF, // primaryForeground
+    0xFFE2E8F0, // secondary
+    0xFF1E293B, // secondaryForeground
+    0xFFF1F5F9, // muted
+    0xFF64748B, // mutedForeground
+    0xFF16A34A, // success
+    0xFFD97706, // warning
+    0xFFDC2626, // danger
+    0xFF0EA5E9, // info
+    0xFFCBD5E1, // border
+    0xFFE2E8F0  // divider
+  );
 }

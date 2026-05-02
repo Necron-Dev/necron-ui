@@ -95,7 +95,7 @@ public class Palette {
   public static final Palette GLOBAL = fromList(
     GLOBAL_BOXES
       .stream()
-      .map(color -> useGradient(color, (a, x) -> a.interrupt().next(Ease.LINEAR, x, 0, 1000)))
+      .map(color -> useGradient(color, (a, x) -> a.interrupt().next(Ease.LINEAR, x, 0, 500)))
       .toList()
   );
 

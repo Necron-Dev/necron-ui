@@ -55,7 +55,7 @@ public class Text extends Node {
   ) {
     SubReact<Float> heightReact = null;
     val height = size.getHeight() instanceof Dim.Min
-                 ? px(heightReact = useSub())
+                 ? px(heightReact = useSub(fp(0), x -> x))
                  : size.getHeight();
     super(parent, key, size.withHeight(height), positioning, elevation);
     this.content = content;

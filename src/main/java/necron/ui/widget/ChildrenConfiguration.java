@@ -22,8 +22,9 @@ public interface ChildrenConfiguration {
     void buildChildren(ChildrenBuilderDsl dsl);
   }
 
-  @FunctionalInterface
   interface ChildrenBuilderDsl {
+    Container parent();
+
     void add(Object key, Fn2<? super Container, ? super Object, ? extends Element> factory);
 
     default <T> void add(
@@ -42,18 +43,26 @@ public interface ChildrenConfiguration {
     val context = new ChildrenContext();
     val builder = configuration.getChildrenBuilder(context);
     val react = React.<Element>useCalcList(emit -> {
-      builder.buildChildren((key, factory) -> {
-        emit.accept(new ConstructorWithKey<>() {
-          @Override
-          public Element construct() {
-            return factory.invoke(container, key);
-          }
+      builder.buildChildren(new ChildrenBuilderDsl() {
+        @Override
+        public Container parent() {
+          return container;
+        }
 
-          @Override
-          public Object getKey() {
-            return key;
-          }
-        });
+        @Override
+        public void add(Object key, Fn2<? super Container, ? super Object, ? extends Element> factory) {
+          emit.accept(new ConstructorWithKey<>() {
+            @Override
+            public Element construct() {
+              return factory.invoke(container, key);
+            }
+
+            @Override
+            public Object getKey() {
+              return key;
+            }
+          });
+        }
       });
     });
     context.configure.accept(react);

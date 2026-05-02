@@ -7,6 +7,8 @@ import necron.ui.render.Renderable;
 import necron.ui.widget.Container;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.client.input.KeyEvent;
+import net.minecraft.client.input.MouseButtonEvent;
 import net.minecraft.network.chat.Component;
 
 import java.util.ArrayList;
@@ -37,6 +39,63 @@ public class NecronUiScreen extends Screen {
     for (val renderable : renderables) {
       renderable.render(gui);
     }
+  }
+
+  @Override
+  public boolean keyPressed(KeyEvent event) {
+    if (super.keyPressed(event)) return true;
+    root.dispatch(
+      context, new necron.ui.event.KeyEvent(
+        necron.ui.event.KeyEvent.Type.KEYBOARD,
+        event.key(),
+        true
+      ), false
+    );
+    return true;
+  }
+
+  @Override
+  public boolean keyReleased(KeyEvent event) {
+    if (super.keyReleased(event)) return true;
+    root.dispatch(
+      context, new necron.ui.event.KeyEvent(
+        necron.ui.event.KeyEvent.Type.KEYBOARD,
+        event.key(),
+        false
+      ), false
+    );
+    return true;
+  }
+
+  @Override
+  public boolean mouseClicked(MouseButtonEvent event, boolean isDoubleClick) {
+    if (super.mouseClicked(event, isDoubleClick)) return true;
+    root.dispatch(
+      context, new necron.ui.event.KeyEvent(
+        necron.ui.event.KeyEvent.Type.MOUSE,
+        event.button(),
+        true
+      ), false
+    );
+    return true;
+  }
+
+  @Override
+  public boolean mouseReleased(MouseButtonEvent event) {
+    if (super.mouseReleased(event)) return true;
+    root.dispatch(
+      context, new necron.ui.event.KeyEvent(
+        necron.ui.event.KeyEvent.Type.MOUSE,
+        event.button(),
+        false
+      ), false
+    );
+    return true;
+  }
+
+  @Override
+  public boolean mouseScrolled(double mouseX, double mouseY, double scrollX, double scrollY) {
+    return super.mouseScrolled(mouseX, mouseY, scrollX, scrollY);
   }
 
   public static void display(Container root) {
