@@ -14,6 +14,7 @@ public class Input {
   );
 
   public static void update() {
-
+    MOUSE_X.forceUpdate();
+    MOUSE_Y.forceUpdate();
   }
 }
