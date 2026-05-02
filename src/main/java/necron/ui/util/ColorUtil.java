@@ -9,7 +9,19 @@ public class ColorUtil {
     return color | ((int) (opacity * factor) << 24);
   }
 
+  public static int scaleRGB(int color, float factor) {
+    val a = ai(color);
+    val r = (int) (ri(color) * factor);
+    val g = (int) (gi(color) * factor);
+    val b = (int) (bi(color) * factor);
+    return compose(a, r, g, b);
+  }
+
   public static int compose(int a, int r, int g, int b) {
+    a = Math.clamp(a, 0, 255);
+    r = Math.clamp(r, 0, 255);
+    g = Math.clamp(g, 0, 255);
+    b = Math.clamp(b, 0, 255);
     return (a << 24) | (r << 16) | (g << 8) | b;
   }
 

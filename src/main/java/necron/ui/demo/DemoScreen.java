@@ -8,12 +8,13 @@ import necron.ui.event.Event;
 import necron.ui.event.KeyEvent;
 import necron.ui.style.DefaultPalettes;
 import necron.ui.style.Palette;
+import necron.ui.widget.container.Card;
 import necron.ui.widget.container.Fullscreen;
-import necron.ui.widget.element.RoundedRect;
+import necron.ui.widget.container.SimpleButton;
 import necron.ui.widget.element.Text;
 import net.minecraft.network.chat.Component;
 
-import static necron.ui.layout.Box.size;
+import static necron.ui.layout.Box.box;
 import static necron.ui.layout.Dim.*;
 import static necron.ui.layout.Pos.anchor;
 import static necron.ui.react.React.useConst;
@@ -25,24 +26,30 @@ public class DemoScreen {
   public static int display() {
     NecronUiScreen.display(new Fullscreen(_ -> d0 -> {
       d0.add(
-        _id, RoundedRect::roundedRect,
-        it ->
-          it.positioning(anchor(0.5F, 0.5F, 0.5F, 0.5F, 0, 0))
-            .size(size(px(240), px(180)))
-            .color(Palette.GLOBAL.getBackground())
-            .radius(fp(12))
-            .build()
-      );
-      d0.add(
-        _id, Text::text,
-        it ->
-          it.positioning(anchor(0.5F, 0.5F, 0.5F, 0.5F, 0, 0))
-            .size(size(px(240), min()))
-            .color(Palette.GLOBAL.getForeground())
-            .fontSize(fp(64))
-            .elevation(d0.parent().up(1.1F))
-            .content(useConst(Component.literal("Hello World")))
-            .build()
+        _id, Card::card,
+        it -> it.positioning(anchor(0.5F, 0.5F, 0.5F, 0.5F, 0, 0))
+                .sizePadding(box(px(240), px(180), 12))
+                .build(),
+        _ -> d1 -> {
+          d1.add(
+            _id, SimpleButton::simpleButton,
+            it -> it
+                    .sizePadding(box(flex(), min(), 8))
+                    .build(),
+            _ -> d2 -> {
+              d2.add(
+                _id, Text::text,
+                it -> it.content(useConst(Component.literal("Click")))
+                        .color(Palette.GLOBAL.getPrimaryForeground())
+                        .build()
+              );
+            }
+          );
+          d1.spacer(_id, px(4));
+          d1.divider(_id);
+          d1.spacer(_id, px(4));
+          d1.add(_id, Text::text, it -> it.content(useConst(Component.literal("Hello"))).build());
+        }
       );
     }) {
       @Override

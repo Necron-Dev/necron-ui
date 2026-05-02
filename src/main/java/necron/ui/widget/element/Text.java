@@ -11,6 +11,7 @@ import necron.ui.layout.Pos;
 import necron.ui.react.React;
 import necron.ui.react.SubReact;
 import necron.ui.render.TextLineRenderable;
+import necron.ui.style.Palette;
 import necron.ui.widget.Container;
 import net.minecraft.client.gui.Font;
 import net.minecraft.network.chat.Component;
@@ -143,7 +144,7 @@ public class Text extends Node {
              .fontSize(fp(Lazy.MC.font.lineHeight))
              .spacing(fp(2))
              .align(fp(0))
-             .color(useConst(-1))
+             .color(Palette.GLOBAL.getForeground())
              .wrap(useConst(true));
   }
 }

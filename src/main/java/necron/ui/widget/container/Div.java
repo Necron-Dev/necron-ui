@@ -299,7 +299,7 @@ public class Div extends Node implements Container {
   public Node divider(Object id) {
     return new Node(
       this, id,
-      axis == Axis.X
+      axis == Axis.Y
       ? size(dependent(getWidth()), px(Surface.PIXEL))
       : size(px(Surface.PIXEL), dependent(getHeight())),
       auto(),
@@ -333,11 +333,15 @@ public class Div extends Node implements Container {
     return new DivBuilder()
              .parent(parent)
              .key(key)
-             .sizePadding(box(flex(), flex()))
+             .sizePadding(box(min(), min()))
              .positioning(auto())
              .elevation($($(parent.up(1)), fp(0)))
              .axis(Axis.Y)
              .alignment(fp(0))
              .children(_ -> _ -> {});
+  }
+
+  public static DivBuilder div(Container parent, Object key, ChildrenConfiguration children) {
+    return div(parent, key).children(children);
   }
 }

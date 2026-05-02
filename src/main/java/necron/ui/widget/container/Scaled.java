@@ -108,10 +108,14 @@ public class Scaled extends Node implements Container {
     return new ScaledBuilder()
              .parent(parent)
              .key(key)
-             .size(size(flex(), flex()))
+             .size(size(min(), min()))
              .positioning(auto())
              .elevation($($(parent.up(1)), fp(0)))
              .scale(fp(1))
              .children(_ -> _ -> {});
+  }
+
+  public static ScaledBuilder scaled(Container parent, Object key, ChildrenConfiguration children) {
+    return scaled(parent, key).children(children);
   }
 }

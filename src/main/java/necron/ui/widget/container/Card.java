@@ -6,15 +6,15 @@ import necron.ui.layout.Axis;
 import necron.ui.layout.Box;
 import necron.ui.layout.Pos;
 import necron.ui.react.React;
+import necron.ui.style.Palette;
 import necron.ui.widget.ChildrenConfiguration;
 import necron.ui.widget.Container;
 import necron.ui.widget.element.RoundedRect;
 
 import static necron.ui.layout.Box.box;
-import static necron.ui.layout.Dim.flex;
 import static necron.ui.layout.Dim.fp;
+import static necron.ui.layout.Dim.min;
 import static necron.ui.layout.Pos.auto;
-import static necron.ui.react.React.useConst;
 import static yqloss.E.$;
 
 public class Card extends Div {
@@ -53,13 +53,17 @@ public class Card extends Div {
     return new CardBuilder()
              .parent(parent)
              .key(key)
-             .sizePadding(box(flex(), flex()))
+             .sizePadding(box(min(), min()))
              .positioning(auto())
              .elevation($($(parent.up(1)), fp(0)))
              .axis(Axis.Y)
              .alignment(fp(0))
-             .cornerRadius(fp(0))
-             .background(useConst(0xFF000000))
+             .cornerRadius(fp(12))
+             .background(Palette.GLOBAL.getBackground())
              .children(_ -> _ -> {});
+  }
+
+  public static CardBuilder card(Container parent, Object key, ChildrenConfiguration children) {
+    return card(parent, key).children(children);
   }
 }

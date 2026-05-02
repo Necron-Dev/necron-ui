@@ -10,6 +10,7 @@ import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.input.KeyEvent;
 import net.minecraft.client.input.MouseButtonEvent;
 import net.minecraft.network.chat.Component;
+import org.joml.Vector2f;
 
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -25,6 +26,11 @@ public class NecronUiScreen extends Screen {
 
   @Override
   public void render(GuiGraphics gui, int mouseX, int mouseY, float partialTick) {
+    root.dispatch(
+      context, new MousePosEvent(new Vector2f(
+        Input.MOUSE_X.peek(), Input.MOUSE_Y.peek()
+      )), false
+    );
     root.dispatch(context, PreEvent.INSTANCE, false);
     root.dispatch(context, ContentEvent.INSTANCE, false);
     root.dispatch(context, MetricsEvent.INSTANCE, false);
